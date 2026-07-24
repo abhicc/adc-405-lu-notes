@@ -1,0 +1,162 @@
+---
+title: "SQL I: Accessing Databases and Database Tables"
+execute: 
+  eval: false
+  warning: false
+  message: false
+  cache: true
+---
+
+
+
+## resources
+
+* [R for Data Science (2e) - Chapter 21](https://r4ds.hadley.nz/)
+
+* [Modern Data Science with R (3e) - Chapters 15 and 16](https://mdsr-book.github.io/mdsr3e/)
+
+* [Notes from Database Systems at UC Berkeley](https://cs186berkeley.net/notes/)
+
+* [Introduction to dbplyr](https://cran.r-project.org/web/packages/dbplyr/vignettes/dbplyr.html)
+
+* [Hands-on Database (2e) - Steve Conger](https://github.com/toantd14/Catalogue-IT-Books/blob/master/Hands-on%20Database%202nd%20-%20Steve%20Conger.pdf)
+
+* CMSC 225 - Database Techniques and Modeling (F'26 and S'27)
+
+
+
+## load packages
+
+```{r}
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(mdsr)
+library(DBI)
+library(RMariaDB)
+library(dbplyr)
+```
+
+
+
+## databases and accessing them
+
+```{r}
+# access airlines database
+
+con_air <- mdsr::dbConnect_scidb("airlines")
+
+```
+
+
+```{r}
+# access wai database
+
+con_wai <- DBI::dbConnect(
+  RMariaDB::MariaDB(),
+  dbname = "wai",
+  host = "scidb.smith.edu",
+  user = "waiuser",
+  password = "smith_waiDB")
+
+```
+
+
+
+## database tables and accessing them
+
+```{r}
+# lists tables in the database
+
+DBI::dbListTables(con_air)   
+
+```
+
+
+```{sql connection="con_air"}
+--- lists tables in the database
+
+SHOW TABLES;
+
+```
+
+
+```{r}
+# access flights table from the airlines database
+
+flights <- dplyr::tbl(con_air, "flights")
+
+```
+
+
+```{sql}
+--| connection: con_air
+
+DESCRIBE flights;
+
+```
+
+
+```{r}
+# access carriers table from the airlines database
+
+carriers <- dplyr::tbl(con_air, "carriers")
+
+```
+
+
+```{sql}
+--| connection: con_air
+
+DESCRIBE carriers;
+
+```
+
+
+```{r}
+# carriers lives in the SQL database and is linked remotely
+
+carriers |>
+  utils::object.size() |>   
+  print(units = "Kb")
+
+# nycflights13::flights |> 
+#   object.size() |>
+#   print(units = "Mb")
+
+```
+
+
+```{r}
+# carriers lives in R
+
+carriers |>
+  dplyr::collect() |>
+  utils::object.size() |>
+  print(units = "Kb")
+
+```
+
+
+```{r}
+
+carries_df <- carriers |>  dplyr::collect()   
+
+```
+
+
+```{r}
+# terminate the SQL connection
+
+DBI::dbDisconnect(con_air, shutdown = TRUE)
+
+```
+
+
+
+
+
+
+
+

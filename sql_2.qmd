@@ -1,0 +1,311 @@
+---
+title: "SQL II: Writing SQL queries"
+format: pdf
+---
+
+# ------------------------------------------------------------------------------
+# load packages and connect to database server
+
+```{r}
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(mdsr)
+library(DBI)
+library(RMariaDB)
+library(dbplyr)
+```
+
+
+```{r}
+# access airlines database
+
+con_air <- mdsr::dbConnect_scidb("airlines")
+
+DBI::dbListTables(con_air)   # list tables in database
+
+```
+
+
+```{r}
+# access flights table from the airlines database
+
+flights <- dplyr::tbl(con_air, "flights")
+
+```
+
+
+```{sql}
+#| connection: con_air
+
+DESCRIBE flights;
+
+```
+
+
+
+# ------------------------------------------------------------------------------
+# SQL in R: Part 1 - the 'dbplyr' R package will directly translate 'dplyr' code into SQL
+
+```{r}
+
+yrs <- flights |>
+  summarize(min_year = min(year, na.rm = TRUE), 
+            max_year = max(year, na.rm = TRUE))
+
+yrs
+
+```
+
+```{r}
+dplyr::show_query(yrs)  
+```
+
+
+
+```{r}
+
+la_bos <- flights |>
+  filter(year == 2013 & 
+           ((origin == "LAX" & dest == "BOS") | 
+           (origin == "BOS" & dest == "LAX"))) 
+
+la_bos
+
+```
+
+```{r}
+dplyr::show_query(la_bos)
+```
+
+```{r}
+
+la_bos <- la_bos |>
+  collect()
+
+la_bos
+
+```
+
+
+
+```{r}
+# terminate the SQL connection
+
+DBI::dbDisconnect(con_air, shutdown = TRUE)
+
+```
+
+
+
+# ------------------------------------------------------------------------------
+# SQL in R: Part 2 - using the DBI R package to write SQL queries in r code chunks
+
+```{r}
+
+DBI::dbGetQuery(con_air,
+                "SELECT * FROM flights LIMIT 8;")  
+
+```
+
+
+```{r}
+
+DBI::dbGetQuery(con_air, 
+  "SELECT year, count(*) AS num_flights FROM flights GROUP BY year ORDER BY num_flights;")
+
+```
+
+
+```{r}
+# terminate the SQL connection
+
+DBI::dbDisconnect(con_air, shutdown = TRUE)
+
+```
+
+
+
+# ------------------------------------------------------------------------------
+# SQL in R: Part 3 - writing SQL queries in sql code chunks
+
+
+```{sql}
+#| connection: con_air
+
+SELECT MIN(year) AS min_year, 
+       MAX(year) AS max_year
+FROM flights;
+
+```
+
+
+```{sql}
+#| connection: con_air
+
+SELECT *
+FROM flights
+WHERE (year = 2013 AND 
+      ((origin = 'LAX' AND dest = 'BOS') OR 
+      (origin = 'BOS' AND dest = 'LAX')));
+
+```
+
+
+```{sql}
+#| connection: con_air
+
+SELECT * 
+FROM flights 
+LIMIT 2;
+
+```
+
+
+```{sql}
+#| connection: con_air
+
+SELECT year, 
+       COUNT(*) AS num_flights 
+FROM flights 
+GROUP BY year 
+ORDER BY num_flights;
+
+```
+
+
+Queries in SQL start with the *SELECT* keyword and consist of several clauses, which have to be written in this order:
+
+* *SELECT* allows you to list the columns, or functions operating on columns, that you want to retrieve. 
+
+* *FROM* specifies the table where the data are.
+
+* *JOIN* allows you to stitch together two or more tables using a key. 
+
+* *WHERE* allows you to extract rows according to some criteria. 
+
+* *GROUP BY* allows you to aggregate the records according to some shared value. 
+
+* *HAVING* is like a WHERE clause that operates on the result set—not the original rows themselves. 
+
+* *ORDER BY* orders the rows of the result set. 
+
+* *LIMIT* restricts the number of rows in the output. 
+
+
+```{sql}
+#| connection: con_air
+
+DESCRIBE flights;
+
+```
+
+
+
+```{sql}
+#| connection: con_air
+
+# display the first ten rows of the flights table
+
+
+
+```
+
+
+```{sql}
+#| connection: con_air
+
+# display year, month, day, origin, dep_time, sched_dep_time, dep_delay for the first ten rows of the flights table
+
+
+
+```
+
+
+```{sql}
+#| connection: con_air
+
+# count the total number of rows in the flights table
+
+
+
+```
+
+
+```{sql}
+#| connection: con_air
+
+# extract all info about flights that flew from Appleton (ATW) to Chicago (ORD) in 2013
+
+
+
+```
+
+
+```{sql}
+#| connection: con_air
+
+# count the number of flights from Appleton (ATW) for each year
+
+
+
+```
+
+
+```{sql}
+#| connection: con_air
+
+# which carriers flew from Appleton (ATW) to Chicago (ORD)
+# how many flights did they do per year
+
+
+
+```
+
+
+```{sql}
+#| connection: con_air
+
+# for flights that flew from Appleton (ATW) to Chicago (ORD)
+# what was the latest flight for each carrier
+
+
+
+```
+
+
+```{sql}
+#| connection: con_air
+
+# for flights that flew from Appleton (ATW) 
+# which destination had the lowest average arrival delay time
+
+
+
+```
+
+
+```{sql}
+#| connection: con_air
+
+# for flights that flew from Appleton (ATW) 
+# consider only destinations with at least 2000 flights from Appleton (ATW)
+# which destination had the lowest average arrival delay time
+
+
+
+```
+
+
+```{r}
+# terminate the SQL connection
+
+DBI::dbDisconnect(con_air, shutdown = TRUE)
+
+```
+
+
+# ------------------------------------------------------------------------------
+
+

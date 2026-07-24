@@ -1,0 +1,395 @@
+---
+title: "Text Analysis II - Case Study of Donald Trump's tweets during the 2016 US presidential election"
+format: pdf
+editor: visual
+---
+
+# ------------------------------------------------------------------------------
+# resources
+
+* [Trump Twitter Archive](https://www.thetrumparchive.com/)
+
+* [Todd Vaziri's Tweet](https://x.com/tvaziri/status/762005541388378112/photo/1)
+
+* [David Robinson's Blog Post](http://varianceexplained.org/r/trump-tweets/)
+
+* [Text Mining With R](https://www.tidytextmining.com/)
+
+
+# ------------------------------------------------------------------------------
+# packages
+
+```{r}
+library(tidyverse)
+library(scales)
+library(tidytext)
+library(textdata)
+library(dslabs)
+```
+
+
+# ------------------------------------------------------------------------------
+# data
+
+Our data come from the *dslabs* package. 
+
+```{r}
+
+data("trump_tweets")
+
+?trump_tweets
+
+glimpse(trump_tweets)
+
+```
+
+
+```{r}
+
+range(trump_tweets$created_at)
+
+```
+
+
+```{r}
+
+trump_tweets$text[16413]
+
+```
+
+
+```{r}
+
+trump_tweets |> 
+  count(source) |> 
+  arrange(desc(n)) 
+
+```
+
+
+For our case study, we are interested in what happened during the 2016 campaign, so for this analysis we will focus on what was tweeted between the day Trump announced his campaign and election day. Also, we only keep tweets from Android or iPhone, and filter out retweets.
+
+```{r}
+
+campaign_tweets <- trump_tweets |> 
+  filter(source %in% paste("Twitter for", c("Android", "iPhone")) &
+           created_at >= ymd("2015-06-17") & 
+           created_at < ymd("2016-11-08")) |>
+  mutate(source = str_remove(source, pattern = "Twitter for ")) |>
+  filter(!is_retweet) |>
+  arrange(created_at) |> 
+  as_tibble()
+
+```
+
+
+```{r}
+
+campaign_tweets |>
+  count(source)
+
+```
+
+
+# ------------------------------------------------------------------------------
+# some initial exploration
+
+We explore the possibility that two different groups were tweeting from these devices. 
+
+```{r}
+
+campaign_tweets |>
+  mutate(hour = hour(with_tz(created_at, "EST"))) |>
+  count(source, hour)
+
+```
+
+
+```{r}
+
+android_vs_iphone_hourly_props <- campaign_tweets |>
+  mutate(hour = hour(with_tz(created_at, "EST"))) |>
+  count(source, hour) |>
+  group_by(source) |>
+  mutate(percent = n / sum(n)) 
+
+android_vs_iphone_hourly_props
+
+```
+
+
+```{r}
+
+android_vs_iphone_hourly_props |>
+  ggplot(aes(x = hour, y = percent, color = source)) +
+  geom_line() +
+  geom_point() +
+  scale_y_continuous(labels = percent_format()) +
+  labs(x = "Hour of day (EST)", y = "% of tweets", color = "")
+
+```
+
+
+# ------------------------------------------------------------------------------
+# tokens
+
+```{r}
+
+i <- 3008
+
+campaign_tweets$text[i]
+
+```
+
+
+```{r}
+
+campaign_tweets[i,] |> 
+  tidytext::unnest_tokens(output = word, input = text, token = "words") |>
+  dplyr::pull(word) 
+
+```
+
+
+```{r}
+
+links_to_pics <- "(https://t.co/[A-Za-z\\d]+)|(http://t.co/[A-Za-z\\d]+)"
+
+campaign_tweets[i,] |> 
+  mutate(text = str_remove_all(text, pattern = links_to_pics)) |> 
+  tidytext::unnest_tokens(output = word, input = text, token = "words") |>
+  dplyr::pull(word) 
+
+```
+
+
+```{r}
+
+tweet_words <- campaign_tweets |>
+  mutate(text = str_remove_all(text, pattern = links_to_pics))  |>
+  tidytext::unnest_tokens(output = word, input = text, token = "words")
+
+```
+
+
+```{r}
+
+tweet_words |> 
+  count(word) |>
+  arrange(desc(n))
+
+```
+
+
+#### stop words
+
+```{r}
+
+data(stop_words)
+
+?stop_words
+
+```
+
+
+```{r}
+
+tweet_words <- campaign_tweets |> 
+  mutate(text = str_remove_all(text, pattern = links_to_pics))  |>
+  tidytext::unnest_tokens(output = word, input = text, token = "words") |> 
+  filter(!(word %in% stop_words$word))
+
+tweet_words |> 
+  count(word) 
+
+```
+
+
+```{r}
+
+tweet_words <- campaign_tweets |> 
+  mutate(text = str_remove_all(text, links_to_pics))  |>
+  tidytext::unnest_tokens(output = word, input = text, token = "words") |>
+  filter(!(word %in% stop_words$word)) |> 
+  filter(!(str_detect(word, pattern = "^\\d+")))   
+
+tweet_words |> 
+  count(word) 
+
+# |>
+#   arrange(desc(n))
+
+```
+
+
+#### further exploration
+
+```{r}
+
+android_vs_iphone <- tweet_words |>
+  count(word, source) 
+
+android_vs_iphone
+
+```
+
+
+```{r}
+
+android_vs_iphone <- tweet_words |>
+  count(word, source) |>
+  pivot_wider(names_from = "source", values_from = "n", values_fill = 0) 
+
+android_vs_iphone
+
+```
+
+
+```{r}
+
+android_vs_iphone <- tweet_words |>
+  count(word, source) |>
+  pivot_wider(names_from = "source", values_from = "n", values_fill = 0) |>
+  mutate(p_a = (Android + 0.5)/(sum(Android) + 0.5), 
+         p_i = (iPhone + 0.5)/(sum(iPhone) + 0.5),  
+         ratio = p_a / p_i)
+
+android_vs_iphone
+
+```
+
+
+```{r}
+
+# for words appearing at least 100 times in total, here are the ten highest percent differences for Android
+
+top_10_android <- android_vs_iphone |> 
+  filter(Android + iPhone >= 100) |> 
+  arrange(desc(ratio)) |> 
+  slice_head(n = 10)
+
+top_10_android
+
+```
+
+
+```{r}
+
+# and the top ten for iPhone
+
+top_10_iphone <- android_vs_iphone |> 
+  filter(Android + iPhone >= 100) |>  
+  arrange(ratio)|> 
+  slice_head(n = 10)
+
+top_10_iphone
+
+```
+
+
+```{r}
+
+top_10_android |> 
+  rbind(top_10_iphone) |> 
+  dplyr::select(word, iPhone, Android, ratio) |> 
+  mutate(log_ratio = log(ratio)) |> 
+  mutate(device = rep(c("Android", "iPhone"), each = 10)) |> 
+  ggplot() +
+  geom_col(aes(x = log_ratio, y = fct_reorder(word, log_ratio), fill = device))
+  
+
+```
+
+
+# ------------------------------------------------------------------------------
+# sentiment analysis
+
+```{r}
+
+tidytext::get_sentiments("bing")
+
+tidytext::get_sentiments("afinn")
+
+tidytext::get_sentiments("nrc")
+
+```
+
+
+```{r}
+
+nrc <- tidytext::get_sentiments("nrc")
+
+nrc |> count(sentiment)
+
+```
+
+
+```{r}
+
+tweet_words |> 
+  left_join(nrc, by = "word") |> 
+  dplyr::select(source, word, sentiment) |> 
+  sample_n(5)
+
+```
+
+
+```{r}
+
+sentiment_counts <- tweet_words |>
+  left_join(nrc, by = "word", relationship = "many-to-many") |>
+  count(source, sentiment) 
+
+sentiment_counts
+
+```
+
+
+```{r}
+
+sentiment_counts <- tweet_words |>
+  left_join(nrc, by = "word", relationship = "many-to-many") |>
+  count(source, sentiment) |>
+  pivot_wider(names_from = "source", values_from = "n") |>
+  mutate(sentiment = replace_na(sentiment, replace = "none"))
+
+sentiment_counts
+
+```
+
+
+```{r}
+
+sentiment_counts <- sentiment_counts |>
+  mutate(p_a = Android/sum(Android), 
+         p_i = iPhone/sum(iPhone), 
+         ratio = p_a/p_i) |> 
+  arrange(desc(ratio))
+
+sentiment_counts
+
+```
+
+
+```{r}
+
+ordered_levels <- sentiment_counts$sentiment
+
+android_vs_iphone |>
+  filter(Android + iPhone >= 10) |>
+  left_join(nrc, by = "word") |>
+  mutate(sentiment = factor(sentiment, levels = sentiment_counts$sentiment)) |>
+  group_by(sentiment) |>
+  slice_max(abs(log(ratio)), n = 10) |>
+  ungroup() |> 
+  mutate(word = reorder(word, -ratio)) |>
+  ggplot(aes(word, ratio, fill = ratio < 1)) +
+  geom_col(show.legend = FALSE) +
+  scale_y_log10() +
+  facet_wrap(~sentiment, scales = "free_x", nrow = 2) + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+
+```
+
+
+# ------------------------------------------------------------------------------

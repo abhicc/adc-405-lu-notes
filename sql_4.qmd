@@ -1,0 +1,201 @@
+---
+title: "SQL IV: Creating Databases"
+format: pdf
+---
+
+# ------------------------------------------------------------------------------
+# load packages and connect to database server
+
+```{r}
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(mdsr)
+library(DBI)
+library(RMariaDB)
+library(dbplyr)
+library(duckdb)
+```
+
+
+As an example, we will consider the Saturday Night Live datasets available on the *snldb* GitHub [repo](https://github.com/hhllcks/snldb). Data is scraped from [SNL archives](http://www.snlarchives.net) and http://www.imdb.com/title/tt0072562 by Hendrik Hilleckes and Colin Morris.
+
+```{r}
+
+con_snl <- DBI::dbConnect(duckdb::duckdb(), dbdir = "snl_db")
+
+```
+
+
+```{sql connection=con_snl}
+SHOW TABLES;
+```
+
+
+# ------------------------------------------------------------------------------
+# accessing data (csv files) from GitHub (or, elsewhere)
+
+Notice that there are eleven *.csv* files available in the *output* folder. Let's look at the *casts* dataset in R, so that we understand the data we want to load into the database.
+
+```{r}
+# read in the data
+
+casts <- readr::read_csv("")
+
+```
+
+
+```{r}
+glimpse(casts)
+
+```
+
+
+```{r}
+summary(casts)
+
+```
+
+
+```{r}
+# save the dataset as a .csv file on your (local) computer
+
+write_csv(casts, "casts.csv")   
+
+```
+
+
+# ------------------------------------------------------------------------------
+# data types in SQL
+
+Consult [data types](https://dev.mysql.com/doc/refman/8.0/en/data-types.html) for details.
+
+
+# ------------------------------------------------------------------------------
+# importing data
+
+Once the database is set up, you will be ready to import .csv files into the database as tables. Importing .csv files as tables requires a series of steps:
+
+* a *USE* statement that ensures we are in the right database.
+* a series of *DROP TABLE* statements that drop any old tables with the same names as the ones we are going to create.
+* a series of *CREATE TABLE* statements that specify the table structures and field types.
+* a series of *COPY* (or *LOAD DATA* for MySQL) statements that read the data from the .csv files into the appropriate tables.
+
+
+```{sql connection=con_snl}
+
+USE snl_db;
+
+```
+
+
+```{sql connection=con_snl}
+
+DROP TABLE IF EXISTS casts;
+
+```
+
+
+```{sql connection=con_snl}
+
+CREATE TABLE casts (
+  aid VARCHAR(255) NOT NULL DEFAULT ' ',
+  sid SMALLINT NOT NULL DEFAULT 0,
+  featured BOOLEAN NOT NULL DEFAULT FALSE,  /* use TINYINT(1) in MySQL instead of BOOLEAN) */
+  first_epid INTEGER DEFAULT NULL,
+  last_epid INTEGER DEFAULT NULL,
+  update_anchor BOOLEAN NOT NULL DEFAULT FALSE,
+  n_episodes SMALLINT NOT NULL DEFAULT 0,
+  season_fraction DOUBLE NOT NULL DEFAULT 0,
+  PRIMARY KEY (sid, aid)
+);
+
+```
+
+
+```{sql connection=con_snl}
+
+COPY casts FROM 'casts.csv' (FORMAT CSV, HEADER, NULL 'NA');
+
+```
+
+
+# ------------------------------------------------------------------------------
+# checks
+
+```{sql connection=con_snl}
+SHOW DATABASES;
+```
+
+
+```{sql connection=con_snl}
+SHOW TABLES;
+```
+
+
+```{sql connection=con_snl}
+DESCRIBE casts;
+```
+
+
+```{sql connection=con_snl}
+SELECT * FROM casts LIMIT 10;
+```
+
+
+
+# ------------------------------------------------------------------------------
+# shortcut (not accepted for Project 2)
+
+```{r}
+# read in the data
+
+episodes <- readr::read_csv("")
+
+glimpse(episodes)
+
+```
+
+
+```{r}
+# save the dataset as a .csv file on your (local) computer
+
+write_csv(episodes, "episodes.csv")   
+
+```
+
+
+```{r}
+
+duckdb_read_csv(con = con_snl, name = "episodes", files = "episodes.csv")
+
+```
+
+
+```{sql connection=con_snl}
+SHOW TABLES;
+```
+
+
+```{sql connection=con_snl}
+DESCRIBE episodes;
+```
+
+
+```{sql connection=con_snl}
+SELECT * FROM episodes LIMIT 10;
+```
+
+
+# ------------------------------------------------------------------------------
+
+```{r}
+# terminate the SQL connection
+
+DBI::dbDisconnect(con_snl, shutdown = TRUE)
+
+```
+
+# ------------------------------------------------------------------------------
+

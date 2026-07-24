@@ -1,0 +1,172 @@
+---
+title: "SQL III: Joins, Unions, and Subqueries"
+format: pdf
+---
+
+# ------------------------------------------------------------------------------
+# load packages and connect to database server
+
+```{r}
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(mdsr)
+library(DBI)
+library(RMariaDB)
+library(dbplyr)
+```
+
+
+```{r}
+# access airlines database
+
+con_air <- mdsr::dbConnect_scidb("airlines")
+
+DBI::dbListTables(con_air)   # list tables in database
+
+```
+
+
+```{r}
+# access tables from the airlines database
+
+flights <- dplyr::tbl(con_air, "flights")
+
+carriers <- dplyr::tbl(con_air, "carriers")
+
+airports <- dplyr::tbl(con_air, "airports")
+
+```
+
+
+
+```{sql}
+#| connection: con_air
+
+DESCRIBE flights;
+
+```
+
+```{sql}
+#| connection: con_air
+
+SELECT * FROM flights LIMIT 10;
+```
+
+
+
+```{sql}
+#| connection: con_air
+
+DESCRIBE carriers;
+
+```
+
+```{sql}
+#| connection: con_air
+
+SELECT * FROM carriers LIMIT 100;
+```
+
+
+
+```{sql}
+#| connection: con_air
+
+DESCRIBE airports;
+
+```
+
+```{sql}
+#| connection: con_air
+
+SELECT * FROM airports LIMIT 100;
+```
+
+
+
+# ------------------------------------------------------------------------------
+# Joins
+
+In general, there are four pieces of information that you need to specify in order to join two tables:
+
+* name of the first table
+* type of join
+* name of the second table
+* condition(s) of the join
+
+
+The following join types are available in MySQL dialect of SQL:
+
+* *JOIN*
+* *LEFT JOIN*
+* *RIGHT JOIN*
+* *CROSS JOIN*
+
+
+```{sql connection=con_air}
+
+# access airport names for flights that flew out of Appleton in 2013
+
+
+
+```
+
+
+```{sql connection=con_air}
+
+# access both airport and carrier names for flights that flew out of Appleton in 2013
+
+
+
+```
+
+
+```{sql connection=con_air}
+
+# using LEFT JOIN
+
+
+
+```
+
+
+
+# ------------------------------------------------------------------------------
+# Unions
+
+```{sql connection=con_air}
+
+# extract all flights that flew from ATW to MSP and from JFK to ORD on April 14, 2013
+
+
+
+```
+
+
+
+# ------------------------------------------------------------------------------
+# Subqueries
+
+```{sql connection=con_air}
+
+# count the number of flights that satisfy the criteria above
+
+
+
+```
+
+
+
+# ------------------------------------------------------------------------------
+
+```{r}
+# terminate the SQL connection
+
+DBI::dbDisconnect(con_air, shutdown = TRUE)
+
+```
+
+# ------------------------------------------------------------------------------
+

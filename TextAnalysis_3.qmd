@@ -1,0 +1,275 @@
+---
+title: "Text Analysis III - Case Study of Data Science Papers from arXiv.org"
+format: pdf
+editor: visual
+---
+
+# ------------------------------------------------------------------------------
+# resources
+
+* [arXiv.org](https://arxiv.org/)
+
+
+# ------------------------------------------------------------------------------
+# packages
+
+```{r}
+library(tidyverse)
+library(scales)
+library(tidytext)
+library(textdata)
+library(mdsr)
+```
+
+
+# ------------------------------------------------------------------------------
+# data
+
+We can import data using the *aRxiv* package. 
+
+```{r}
+
+library(aRxiv)
+
+df <- arxiv_search(
+  query = 'ti:"Data Science"',
+  limit = 20000,
+  batchsize = 100
+)
+
+glimpse(df)
+
+```
+
+
+For this case study we will use some already-collected data from the *mdsr* package.
+
+```{r}
+
+library(mdsr) 
+
+data(DataSciencePapers)
+
+?DataSciencePapers
+
+glimpse(DataSciencePapers)
+
+```
+
+
+### initial data exploration and cleaning
+
+```{r}
+
+DataSciencePapers <- DataSciencePapers |>
+  mutate(
+    submitted = lubridate::ymd_hms(submitted), 
+    updated = lubridate::ymd_hms(updated)
+  )
+
+glimpse(DataSciencePapers)
+
+```
+
+
+```{r}
+
+mosaic::tally(~ year(submitted), data = DataSciencePapers)
+
+```
+
+
+```{r}
+
+DataSciencePapers |>
+  filter(id == "1809.02408v2") |>
+  glimpse()
+
+```
+
+
+```{r}
+
+DataSciencePapers |>
+  group_by(primary_category) |>
+  count()
+
+```
+
+
+```{r}
+
+DataSciencePapers <- DataSciencePapers |>
+  mutate(field = str_extract(primary_category, pattern = "^[a-z,-]+"))
+
+mosaic::tally(x = ~field, margins = TRUE, data = DataSciencePapers) |>
+  sort()
+
+```
+
+
+### corpora and tokenization
+
+```{r}
+
+DataSciencePapers |>
+  unnest_tokens(output = word, input = abstract, token = "words") |>
+  count(id, word, sort = TRUE)
+
+```
+
+
+```{r}
+
+arxiv_words <- DataSciencePapers |>
+  unnest_tokens(output = word, input = abstract, token = "words") |>
+  anti_join(tidytext::get_stopwords(), by = "word")
+
+arxiv_words |>
+  count(id, word, sort = TRUE)
+
+```
+
+
+```{r}
+
+arxiv_abstracts <- arxiv_words |>
+  group_by(id) |>
+  summarize(abstract_clean = paste(word, collapse = " "))
+
+arxiv_papers <- DataSciencePapers |>
+  left_join(arxiv_abstracts, by = "id")
+
+```
+
+
+### wordcloud
+
+```{r}
+
+library(wordcloud)
+
+set.seed(4302026)
+arxiv_papers |>
+  pull(abstract_clean) |>
+  wordcloud(
+    max.words = 40, 
+    scale = c(8, 1), 
+    colors = topo.colors(n = 30), 
+    random.color = TRUE
+  )
+
+```
+
+
+### bigrams
+
+```{r}
+
+arxiv_bigrams <- arxiv_papers |>
+  unnest_tokens(
+    output = arxiv_bigram, 
+    input = abstract_clean, 
+    token = "ngrams", 
+    n = 2
+  ) |>
+  dplyr::select(arxiv_bigram, id)
+
+arxiv_bigrams
+
+arxiv_bigrams |>
+  count(arxiv_bigram, sort = TRUE)
+
+```
+
+
+### tf-idf and document term matrices 
+
+```{r}
+
+arxiv_words |>
+  count(word) |>
+  arrange(desc(n)) |>
+  head()
+
+```
+
+
+```{r}
+
+tidy_DTM <- arxiv_words |>
+  count(id, word) |>
+  tidytext::bind_tf_idf(word, id, n)
+
+tidy_DTM
+
+```
+
+
+```{r}
+
+tidy_DTM |>
+  arrange(desc(tf)) |>
+  head()
+
+```
+
+
+```{r}
+
+tidy_DTM |>
+  arrange(desc(idf), desc(n)) |>
+  head()
+
+```
+
+
+```{r}
+
+tidy_DTM |>
+  filter(word == "wildfire")
+
+```
+
+
+```{r}
+
+arxiv_papers |>
+  pull(abstract) |>
+  str_subset("wildfire") |>
+  strwrap() |>
+  head()
+
+```
+
+
+```{r}
+
+tidy_DTM |>
+  filter(word == "implications")
+
+```
+
+
+```{r}
+
+tidy_DTM |>
+  filter(id == "1809.02408v2") |>
+  arrange(desc(tf_idf)) |>
+  head()
+
+```
+
+
+```{r}
+
+tm_DTM <- arxiv_words |>
+  count(id, word) |>
+  tidytext::cast_dtm(document = id, term = word, value = n)
+
+tm_DTM
+
+```
+
+
+# ------------------------------------------------------------------------------

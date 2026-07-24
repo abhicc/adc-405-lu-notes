@@ -1,0 +1,251 @@
+---
+title: "Code Performance"
+format: pdf
+editor: visual
+---
+
+# ------------------------------------------------------------------------------
+
+# resources
+
+-   [Advanced R](https://adv-r.hadley.nz/index.html) - Chapters 22-25
+
+# ------------------------------------------------------------------------------
+
+# code profiling
+
+```{r}
+# load the package
+library(profvis)  # for profiling R code and visualizing the results
+
+```
+
+```{r}
+# example 1
+
+f <- function() {
+  pause(0.1)
+  g()
+  h()
+}
+
+g <- function() {
+  pause(0.1)
+  h()
+}
+
+h <- function() {
+  pause(0.1)
+}
+
+####
+
+profvis(f())
+
+```
+
+```{r}
+# example 2
+
+# a slow, iterative random walk in R
+random_walk_r <- function(n) {
+  x <- numeric(n)
+  x[1] <- 0
+  for(i in 2:n) {
+    x[i] <- x[i-1] + rnorm(1, mean = 0, sd = 1)
+  }
+  return(x)
+}
+
+####
+
+profvis::profvis({
+  # running a long simulation to give the profiler enough data
+  sim_data <- random_walk_r(1e5) 
+})
+
+
+```
+
+# ------------------------------------------------------------------------------
+
+# improving performance with Rcpp
+
+```{r}
+# load the package
+library(Rcpp)  # for integrating C++ code into R
+
+```
+
+```{r}
+# define the C++ function as a string (or in a separate .cpp file)
+
+Rcpp::cppFunction('
+  NumericVector random_walk_cpp(int n) {
+    NumericVector x(n);
+    x[0] = 0;
+    for(int i = 1; i < n; ++i) {
+      x[i] = x[i-1] + R::rnorm(0, 1);
+    }
+    return x;
+  }
+')
+
+# OR see below
+
+```
+
+```{Rcpp}
+#include <Rcpp.h>
+using namespace Rcpp;
+
+// [[Rcpp::export]]
+
+NumericVector random_walk_cpp_2(int n) {
+  NumericVector x(n);
+  x[0] = 0;
+  for(int i = 1; i < n; ++i) {
+    x[i] = x[i-1] + R::rnorm(0, 1);
+  }
+  return x;
+}
+
+```
+
+```{r}
+
+profvis::profvis({
+  # running a long simulation to give the profiler enough data
+  sim_data_cpp <- random_walk_cpp(1e5) 
+})
+
+```
+
+```{r}
+# install.packages("bench")
+library(bench)
+
+# compare the R vs C++ implementations
+results <- bench::mark(
+  r_version = random_walk_r(10000),
+  cpp_version = random_walk_cpp(10000),
+  iterations = 100,
+  check = FALSE # don't check for exact identical output due to random seeds
+)
+
+```
+
+```{r}
+
+results |> 
+  dplyr::select(expression, min, median, `itr/sec`, mem_alloc)
+
+```
+
+```{r}
+
+plot(results)
+
+```
+
+# ------------------------------------------------------------------------------
+
+# parallelization with future and furrr
+
+```{r}
+# load the packages
+library(tictoc)   # for timing our code execution
+library(future)   # the core parallel backend architecture
+library(furrr)    # a parallel implementation of the purrr family of functions
+
+```
+
+```{r}
+
+future::availableCores()
+
+```
+
+```{r}
+
+future::plan(multisession, workers = 2)
+
+```
+
+```{r}
+
+simulate_median <- function(iteration, n = 1000) {
+  # simulate heavily skewed data (e.g., Log-Normal)
+  sample_data <- rlnorm(n, meanlog = 10, sdlog = 1)
+  
+  # return a tibble with the result
+  tibble(
+    iteration = iteration,
+    median_val = median(sample_data)
+  )
+}
+
+```
+
+```{r}
+# always test the function at least once before parallelizing
+
+simulate_median(iteration = 1)
+
+```
+
+```{r}
+
+tic("Sequential Purrr")
+set.seed(405)
+results_seq <- 1:1e4 |> 
+  purrr::map_dfr(.f = simulate_median)
+toc()
+
+```
+
+```{r}
+
+tic("Parallel Furrr")
+set.seed(405)
+results_par <- 1:1e4 |> 
+  furrr::future_map_dfr(.f = simulate_median, .options = furrr_options(seed = TRUE))
+toc()
+
+```
+
+# ------------------------------------------------------------------------------
+
+# efficient file handling
+
+```{r}
+# load the packages
+library(tidyverse)     # for data manipulation and writing CSV files
+library(nanoparquet)   # for writing Parquet files in R
+
+```
+
+```{r}
+
+write_csv(results_seq, "results_seq.csv")
+
+write_parquet(results_seq, "results_seq.parquet")
+
+```
+
+```{r}
+
+read_bench <- bench::mark(
+  csv = read_csv("results_seq.csv", show_col_types = FALSE),
+  parquet = read_parquet("results_seq.parquet"),
+  iterations = 15,
+  check = FALSE
+)
+
+read_bench |> select(expression, median)
+
+plot(read_bench)
+
+```
+
+# ------------------------------------------------------------------------------

@@ -1,0 +1,258 @@
+---
+title: "Text Analysis I - Case Study of Shakepearse's Macbeth using Regular Expressions"
+format: pdf
+editor: visual
+---
+
+# ------------------------------------------------------------------------------
+# resources
+
+* [Text Mining with R](https://www.tidytextmining.com/)
+
+* [Modern Data Science with R (3e) - Chapter 19](https://mdsr-book.github.io/mdsr3e/)
+
+
+# ------------------------------------------------------------------------------
+# packages
+
+```{r}
+library(tidyverse)
+```
+
+
+# ------------------------------------------------------------------------------
+# data
+
+Our data comes from [Project Gutenberg](https://www.gutenberg.org/), a large repository of free eBooks. We will be working with the text of Shakespeare’s play Macbeth, which is available at https://www.gutenberg.org/cache/epub/1129/pg1129.txt. The text is in the public domain, so we are free to use it for our analysis.
+
+```{r}
+library(gutenbergr)
+
+data("gutenberg_metadata")
+
+macbeth_all <- gutenberg_metadata |>
+  filter(str_detect(title, "Macbeth"))
+
+book <- gutenberg_download(1129, meta_fields = "title")
+
+```
+
+
+For our case study, we will be working with the raw text of the play, which is available in the `mdsr` package. 
+
+```{r}
+
+library(mdsr)
+
+data(Macbeth_raw)
+
+?Macbeth_raw
+
+```
+
+
+```{r}
+
+macbeth <- Macbeth_raw |>
+  str_split("\r\n") |>
+  pluck(1)
+
+length(macbeth)
+
+macbeth[300:310]
+
+```
+
+
+# ------------------------------------------------------------------------------
+# strings and regular expressions
+
+```{r}
+# how many times does the character Macbeth speak in the play?
+
+macbeth_lines <- macbeth |>
+  str_subset("  MACBETH")
+
+length(macbeth_lines)
+
+head(macbeth_lines)
+
+```
+
+
+```{r}
+
+macbeth |>
+  str_which("  MACBETH")
+
+```
+
+
+
+# about regular expressions grammar
+
+#### metacharacter
+
+```{r}
+
+macbeth |>
+  str_subset("MAC.") |>
+  head()  
+
+```
+
+
+```{r}
+
+macbeth |>
+  str_subset("MACBETH\\.") |>
+  head()
+
+```
+
+
+#### character sets
+
+```{r}
+
+macbeth |>
+  str_subset("MAC[B-Z]") |>
+  head()
+
+```
+
+
+#### alternation
+
+```{r}
+
+macbeth |>
+  str_subset("MAC(B|D)") |>
+  head()
+
+```
+
+
+#### anchors (power-dollar)
+
+```{r}
+
+macbeth |>
+  str_subset("^  MAC[B-Z]") |>
+  head()
+
+```
+
+
+```{r}
+
+macbeth |>
+  str_subset("\\.$") |>
+  head()
+
+```
+
+
+#### repetitions
+
+```{r}
+
+# ?  
+
+macbeth |>
+  str_subset("^ ?MAC[B-Z]") |>
+  head()
+
+```
+
+```{r}
+
+# * 
+
+macbeth |>
+  str_subset("^ *MAC[B-Z]") |>
+  head()
+
+```
+
+```{r}
+
+# + 
+
+macbeth |>
+  str_subset("^ +MAC[B-Z]") |>
+  head()
+
+```
+
+
+# ------------------------------------------------------------------------------
+# a case study - life and death in Macbeth and speaking patterns
+
+
+```{r}
+
+macbeth_chars <- tribble(
+  ~name, ~regexp,
+  "Macbeth", "  MACBETH\\.",
+  "Lady Macbeth", "  LADY MACBETH\\.",
+  "Banquo", "  BANQUO\\.",
+  "Duncan", "  DUNCAN\\.",
+) |>
+  mutate(speaks = purrr::map(regexp, str_detect, string = macbeth))
+
+```
+
+
+```{r}
+
+speaker_freq <- macbeth_chars |>
+  unnest(cols = speaks) |>
+  mutate(
+    line = rep(1:length(macbeth), 4),
+    speaks = as.numeric(speaks)
+  ) |>
+  filter(line > 218 & line < 3172)
+
+glimpse(speaker_freq)
+
+```
+
+
+```{r}
+
+acts <- tibble(
+  line = str_which(macbeth, "^ACT [I|V]+"), 
+  line_text = str_subset(macbeth, "^ACT [I|V]+"),
+  labels = str_extract(line_text, "^ACT [I|V]+")
+)
+
+```
+
+
+```{r}
+
+ggplot(data = speaker_freq, aes(x = line, y = speaks)) + 
+  geom_smooth(
+    aes(color = name), method = "loess", 
+    se = FALSE, span = 0.4
+  ) + 
+  geom_vline(
+    data = acts, 
+    aes(xintercept = line), 
+    color = "darkgray", lty = 3
+  ) + 
+  geom_text(
+    data = acts, 
+    aes(y = 0.085, label = labels), 
+    hjust = "left", color = "darkgray"
+  ) + 
+  ylim(c(0, NA)) + 
+  xlab("Line Number") +
+  ylab("Proportion of Speeches") + 
+  scale_color_colorblind()
+
+```
+
+
+# ------------------------------------------------------------------------------

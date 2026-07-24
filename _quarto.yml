@@ -1,0 +1,26 @@
+project:
+  type: book
+
+book:
+  title: "Advanced Data Computing (405 @ LU) Notes"
+  author: "Abhishek Chakraborty"
+  date: "7/24/2026"
+  chapters:
+    - index.qmd
+    - sql_1.qmd
+    - intro.qmd
+    - summary.qmd
+    - references.qmd
+
+bibliography: references.bib
+
+format:
+  html:
+    theme:
+      - cosmo
+      - brand
+  pdf:
+    documentclass: scrreprt
+
+
+
