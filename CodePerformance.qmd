@@ -1,18 +1,21 @@
 ---
 title: "Code Performance"
-format: pdf
-editor: visual
+execute: 
+  eval: false
+  warning: false
+  message: false
+  cache: true
 ---
 
-# ------------------------------------------------------------------------------
 
-# resources
 
--   [Advanced R](https://adv-r.hadley.nz/index.html) - Chapters 22-25
+## resources
 
-# ------------------------------------------------------------------------------
+- [Advanced R](https://adv-r.hadley.nz/index.html) - Chapters 22-25
 
-# code profiling
+
+
+## code profiling
 
 ```{r}
 # load the package
@@ -67,9 +70,9 @@ profvis::profvis({
 
 ```
 
-# ------------------------------------------------------------------------------
 
-# improving performance with Rcpp
+
+## improving performance with Rcpp
 
 ```{r}
 # load the package
@@ -148,9 +151,9 @@ plot(results)
 
 ```
 
-# ------------------------------------------------------------------------------
 
-# parallelization with future and furrr
+
+## parallelization with future and furrr
 
 ```{r}
 # load the packages
@@ -214,9 +217,9 @@ toc()
 
 ```
 
-# ------------------------------------------------------------------------------
 
-# efficient file handling
+
+## efficient file handling
 
 ```{r}
 # load the packages
@@ -248,4 +251,4 @@ plot(read_bench)
 
 ```
 
-# ------------------------------------------------------------------------------
+

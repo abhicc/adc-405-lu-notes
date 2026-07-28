@@ -31,13 +31,11 @@ book:
         
     - part: Geospatial Data
       chapters: 
-        - sql_1.qmd
-        - sql_2.qmd
+        - GeospatialData.qmd
         
     - part: Code Performance
       chapters: 
-        - sql_1.qmd
-        - sql_2.qmd
+        - CodePerformance.qmd
         
         
         

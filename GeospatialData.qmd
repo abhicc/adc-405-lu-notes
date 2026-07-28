@@ -1,22 +1,25 @@
 ---
-title: "Geospatial Data - Recreating John Snow's 1854 map of the Broad Street cholera outbreak."
-format: pdf
-editor: visual
+title: "Recreating John Snow's 1854 map of the Broad Street cholera outbreak."
+execute: 
+  eval: false
+  warning: false
+  message: false
+  cache: true
 ---
 
 
-# ------------------------------------------------------------------------------
-# resources
 
-* [Modern Data Science with R (3e) - Chapter 17](https://mdsr-book.github.io/mdsr3e/)
+## resources
 
-* [1854 Broad Street cholera outbreak](https://en.wikipedia.org/wiki/1854_Broad_Street_cholera_outbreak)
+- [Modern Data Science with R (3e) - Chapter 17](https://mdsr-book.github.io/mdsr3e/)
 
-* [Shapefile](https://en.wikipedia.org/wiki/Shapefile)
+- [1854 Broad Street cholera outbreak](https://en.wikipedia.org/wiki/1854_Broad_Street_cholera_outbreak)
+
+- [Shapefile](https://en.wikipedia.org/wiki/Shapefile)
 
 
-# ------------------------------------------------------------------------------
-# packages
+
+## packages
 
 ```{r}
 library(tidyverse)
@@ -27,8 +30,8 @@ library(mapproj)
 ```
 
 
-# ------------------------------------------------------------------------------
-# data
+
+## data
 
 ```{r}
 
@@ -38,13 +41,11 @@ dsn <- fs::path(root, "SnowGIS_SHP")
 
 ```
 
-
 ```{r}
 
 list.files(dsn)
 
 ```
-
 
 ```{r}
 
@@ -52,13 +53,11 @@ st_layers(dsn)
 
 ```
 
-
 ```{r}
 
 CholeraDeaths <- st_read(dsn, layer = "Cholera_Deaths")
 
 ```
-
 
 ```{r}
 
@@ -66,13 +65,11 @@ class(CholeraDeaths)
 
 ```
 
-
 ```{r}
 
 plot(CholeraDeaths["Count"])
 
 ```
-
 
 ```{r}
 
@@ -81,7 +78,6 @@ ggplot(CholeraDeaths) +
 
 ```
 
-
 ```{r}
 
 ggplot(CholeraDeaths) + 
@@ -89,7 +85,6 @@ ggplot(CholeraDeaths) +
   geom_sf(aes(size = Count), alpha = 0.7)
 
 ```
-
 
 ```{r}
 
@@ -100,18 +95,16 @@ st_bbox(CholeraDeaths)
 ```
 
 
-# ------------------------------------------------------------------------------
-# projections
 
-* [Top 10 World Map Projections](https://futuremaps.com/blogs/news/top-10-world-map-projections)
+## projections
 
+[Top 10 World Map Projections](https://futuremaps.com/blogs/news/top-10-world-map-projections)
 
 ```{r}
 
 maps::map(database = "world", projection = "mercator", wrap = TRUE)
 
 ```
-
 
 ```{r}
 
@@ -120,19 +113,18 @@ maps::map(database = "world", projection = "cylequalarea", param = 45, wrap = TR
 ```
 
 
-# ------------------------------------------------------------------------------
-# CRS - coordinate reference system
 
-* [Coordinate Reference System](https://en.wikipedia.org/wiki/Spatial_reference_system) - three formats that are common for storing information about the projection of a geospatial object are EPSG, PROJ.4, and WKT
+## CRS - coordinate reference system
 
-* Common CRSs
+[Coordinate Reference System](https://en.wikipedia.org/wiki/Spatial_reference_system) - three formats that are common for storing information about the projection of a geospatial object are EPSG, PROJ.4, and WKT
+
+Common CRSs
 
   - [EPSG:4326](https://epsg.io/4326) - also known as WGS84, standard for GPS systems and Google Earth
-  
-  - [EPSG:3857](https://epsg.io/3857) - a Mercator projection used in map tiles by Google Maps, Open Street Maps, etc.
-  
-  - [EPSG:27700](https://epsg.io/27700) - also known as OSGB 1936, or the British National Grid, commonly used in Britain
 
+  - [EPSG:3857](https://epsg.io/3857) - a Mercator projection used in map tiles by Google Maps, Open Street Maps, etc.
+
+  - [EPSG:27700](https://epsg.io/27700) - also known as OSGB 1936, or the British National Grid, commonly used in Britain
 
 ```{r}
 st_crs(4326)$epsg
@@ -158,15 +150,13 @@ st_crs(3857)$proj4string
 st_crs(27700)$proj4string
 ```
 
-
-#### what about our dataset?
+## what about our dataset?
 
 ```{r}
 
 st_crs(CholeraDeaths)
 
 ```
-
 
 ```{r}
 
@@ -177,7 +167,6 @@ st_bbox(cholera_4326)
 
 ```
 
-
 ```{r}
 
 ggplot(cholera_4326) + 
@@ -185,7 +174,6 @@ ggplot(cholera_4326) +
   geom_sf(aes(size = Count), alpha = 0.7)
 
 ```
-
 
 ```{r}
 
@@ -204,4 +192,3 @@ ggplot(cholera_4326) +
 ```
 
 
-# ------------------------------------------------------------------------------
