@@ -4,7 +4,7 @@
     "href": "index.html",
     "title": "Advanced Data Computing (405 @ LU) Notes",
     "section": "",
-    "text": "Welcome\nThis is a Quarto book.\nTo learn more about Quarto books visit https://quarto.org/docs/books.",
+    "text": "Welcome",
     "crumbs": [
       "Welcome"
     ]
@@ -491,6 +491,270 @@
     "crumbs": [
       "Text Analysis",
       "<span class='chapter-number'>7</span>  <span class='chapter-title'>Case Study of Data Science Papers from arXiv.org</span>"
+    ]
+  },
+  {
+    "objectID": "GeospatialData.html",
+    "href": "GeospatialData.html",
+    "title": "8  Recreating John Snow’s 1854 map of the Broad Street cholera outbreak.",
+    "section": "",
+    "text": "8.1 resources",
+    "crumbs": [
+      "Geospatial Data",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Recreating John Snow's 1854 map of the Broad Street cholera outbreak.</span>"
+    ]
+  },
+  {
+    "objectID": "GeospatialData.html#resources",
+    "href": "GeospatialData.html#resources",
+    "title": "8  Recreating John Snow’s 1854 map of the Broad Street cholera outbreak.",
+    "section": "",
+    "text": "Modern Data Science with R (3e) - Chapter 17\n1854 Broad Street cholera outbreak\nShapefile",
+    "crumbs": [
+      "Geospatial Data",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Recreating John Snow's 1854 map of the Broad Street cholera outbreak.</span>"
+    ]
+  },
+  {
+    "objectID": "GeospatialData.html#packages",
+    "href": "GeospatialData.html#packages",
+    "title": "8  Recreating John Snow’s 1854 map of the Broad Street cholera outbreak.",
+    "section": "8.2 packages",
+    "text": "8.2 packages\n\nlibrary(tidyverse)\nlibrary(sf)\nlibrary(ggspatial)\nlibrary(maps)\nlibrary(mapproj)",
+    "crumbs": [
+      "Geospatial Data",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Recreating John Snow's 1854 map of the Broad Street cholera outbreak.</span>"
+    ]
+  },
+  {
+    "objectID": "GeospatialData.html#data",
+    "href": "GeospatialData.html#data",
+    "title": "8  Recreating John Snow’s 1854 map of the Broad Street cholera outbreak.",
+    "section": "8.3 data",
+    "text": "8.3 data\n\nroot &lt;- here::here(\"/cloud/project\")  # where we stored these files\n\ndsn &lt;- fs::path(root, \"SnowGIS_SHP\")\n\n\nlist.files(dsn)\n\n\nst_layers(dsn)\n\n\nCholeraDeaths &lt;- st_read(dsn, layer = \"Cholera_Deaths\")\n\n\nclass(CholeraDeaths)\n\n\nplot(CholeraDeaths[\"Count\"])\n\n\nggplot(CholeraDeaths) +\n  geom_sf()\n\n\nggplot(CholeraDeaths) + \n  ggspatial::annotation_map_tile(type = \"osm\", zoomin = 0, progress = \"none\") + \n  geom_sf(aes(size = Count), alpha = 0.7)\n\n\n# bounding boxes\n\nst_bbox(CholeraDeaths)",
+    "crumbs": [
+      "Geospatial Data",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Recreating John Snow's 1854 map of the Broad Street cholera outbreak.</span>"
+    ]
+  },
+  {
+    "objectID": "GeospatialData.html#projections",
+    "href": "GeospatialData.html#projections",
+    "title": "8  Recreating John Snow’s 1854 map of the Broad Street cholera outbreak.",
+    "section": "8.4 projections",
+    "text": "8.4 projections\nTop 10 World Map Projections\n\nmaps::map(database = \"world\", projection = \"mercator\", wrap = TRUE)\n\n\nmaps::map(database = \"world\", projection = \"cylequalarea\", param = 45, wrap = TRUE)",
+    "crumbs": [
+      "Geospatial Data",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Recreating John Snow's 1854 map of the Broad Street cholera outbreak.</span>"
+    ]
+  },
+  {
+    "objectID": "GeospatialData.html#crs---coordinate-reference-system",
+    "href": "GeospatialData.html#crs---coordinate-reference-system",
+    "title": "8  Recreating John Snow’s 1854 map of the Broad Street cholera outbreak.",
+    "section": "8.5 CRS - coordinate reference system",
+    "text": "8.5 CRS - coordinate reference system\nCoordinate Reference System - three formats that are common for storing information about the projection of a geospatial object are EPSG, PROJ.4, and WKT\nCommon CRSs\n\nEPSG:4326 - also known as WGS84, standard for GPS systems and Google Earth\nEPSG:3857 - a Mercator projection used in map tiles by Google Maps, Open Street Maps, etc.\nEPSG:27700 - also known as OSGB 1936, or the British National Grid, commonly used in Britain\n\n\nst_crs(4326)$epsg\n\nst_crs(3857)$epsg\n\nst_crs(27700)$epsg\n\n\nst_crs(4326)$Wkt\n\nst_crs(3857)$Wkt\n\nst_crs(27700)$Wkt\n\n\nst_crs(4326)$proj4string\n\nst_crs(3857)$proj4string\n\nst_crs(27700)$proj4string",
+    "crumbs": [
+      "Geospatial Data",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Recreating John Snow's 1854 map of the Broad Street cholera outbreak.</span>"
+    ]
+  },
+  {
+    "objectID": "GeospatialData.html#what-about-our-dataset",
+    "href": "GeospatialData.html#what-about-our-dataset",
+    "title": "8  Recreating John Snow’s 1854 map of the Broad Street cholera outbreak.",
+    "section": "8.6 what about our dataset?",
+    "text": "8.6 what about our dataset?\n\nst_crs(CholeraDeaths)\n\n\ncholera_4326 &lt;- CholeraDeaths |&gt;\n  st_transform(4326)\n\nst_bbox(cholera_4326)\n\n\nggplot(cholera_4326) + \n  annotation_map_tile(type = \"osm\", zoomin = 0) + \n  geom_sf(aes(size = Count), alpha = 0.7)\n\n\n# add pump locations\n\npumps &lt;- st_read(dsn, layer = \"Pumps\")\n\npumps_4326 &lt;- pumps |&gt;\n  st_transform(4326)\n\nggplot(cholera_4326) + \n  annotation_map_tile(type = \"osm\", zoomin = 0) + \n  geom_sf(aes(size = Count), alpha = 0.7) + \n  geom_sf(data = pumps_4326, color = \"red\", size = 3)",
+    "crumbs": [
+      "Geospatial Data",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Recreating John Snow's 1854 map of the Broad Street cholera outbreak.</span>"
+    ]
+  },
+  {
+    "objectID": "CodePerformance.html",
+    "href": "CodePerformance.html",
+    "title": "9  Code Performance",
+    "section": "",
+    "text": "9.1 resources",
+    "crumbs": [
+      "Code Performance",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Code Performance</span>"
+    ]
+  },
+  {
+    "objectID": "CodePerformance.html#resources",
+    "href": "CodePerformance.html#resources",
+    "title": "9  Code Performance",
+    "section": "",
+    "text": "Advanced R - Chapters 22-25",
+    "crumbs": [
+      "Code Performance",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Code Performance</span>"
+    ]
+  },
+  {
+    "objectID": "CodePerformance.html#code-profiling",
+    "href": "CodePerformance.html#code-profiling",
+    "title": "9  Code Performance",
+    "section": "9.2 code profiling",
+    "text": "9.2 code profiling\n\n# load the package\nlibrary(profvis)  # for profiling R code and visualizing the results\n\n\n# example 1\n\nf &lt;- function() {\n  pause(0.1)\n  g()\n  h()\n}\n\ng &lt;- function() {\n  pause(0.1)\n  h()\n}\n\nh &lt;- function() {\n  pause(0.1)\n}\n\n####\n\nprofvis(f())\n\n\n# example 2\n\n# a slow, iterative random walk in R\nrandom_walk_r &lt;- function(n) {\n  x &lt;- numeric(n)\n  x[1] &lt;- 0\n  for(i in 2:n) {\n    x[i] &lt;- x[i-1] + rnorm(1, mean = 0, sd = 1)\n  }\n  return(x)\n}\n\n####\n\nprofvis::profvis({\n  # running a long simulation to give the profiler enough data\n  sim_data &lt;- random_walk_r(1e5) \n})",
+    "crumbs": [
+      "Code Performance",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Code Performance</span>"
+    ]
+  },
+  {
+    "objectID": "CodePerformance.html#improving-performance-with-rcpp",
+    "href": "CodePerformance.html#improving-performance-with-rcpp",
+    "title": "9  Code Performance",
+    "section": "9.3 improving performance with Rcpp",
+    "text": "9.3 improving performance with Rcpp\n\n# load the package\nlibrary(Rcpp)  # for integrating C++ code into R\n\n\n# define the C++ function as a string (or in a separate .cpp file)\n\nRcpp::cppFunction('\n  NumericVector random_walk_cpp(int n) {\n    NumericVector x(n);\n    x[0] = 0;\n    for(int i = 1; i &lt; n; ++i) {\n      x[i] = x[i-1] + R::rnorm(0, 1);\n    }\n    return x;\n  }\n')\n\n# OR see below\n\n\n#include &lt;Rcpp.h&gt;\nusing namespace Rcpp;\n\n// [[Rcpp::export]]\n\nNumericVector random_walk_cpp_2(int n) {\n  NumericVector x(n);\n  x[0] = 0;\n  for(int i = 1; i &lt; n; ++i) {\n    x[i] = x[i-1] + R::rnorm(0, 1);\n  }\n  return x;\n}\n\n\nprofvis::profvis({\n  # running a long simulation to give the profiler enough data\n  sim_data_cpp &lt;- random_walk_cpp(1e5) \n})\n\n\n# install.packages(\"bench\")\nlibrary(bench)\n\n# compare the R vs C++ implementations\nresults &lt;- bench::mark(\n  r_version = random_walk_r(10000),\n  cpp_version = random_walk_cpp(10000),\n  iterations = 100,\n  check = FALSE # don't check for exact identical output due to random seeds\n)\n\n\nresults |&gt; \n  dplyr::select(expression, min, median, `itr/sec`, mem_alloc)\n\n\nplot(results)",
+    "crumbs": [
+      "Code Performance",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Code Performance</span>"
+    ]
+  },
+  {
+    "objectID": "CodePerformance.html#parallelization-with-future-and-furrr",
+    "href": "CodePerformance.html#parallelization-with-future-and-furrr",
+    "title": "9  Code Performance",
+    "section": "9.4 parallelization with future and furrr",
+    "text": "9.4 parallelization with future and furrr\n\n# load the packages\nlibrary(tictoc)   # for timing our code execution\nlibrary(future)   # the core parallel backend architecture\nlibrary(furrr)    # a parallel implementation of the purrr family of functions\n\n\nfuture::availableCores()\n\n\nfuture::plan(multisession, workers = 2)\n\n\nsimulate_median &lt;- function(iteration, n = 1000) {\n  # simulate heavily skewed data (e.g., Log-Normal)\n  sample_data &lt;- rlnorm(n, meanlog = 10, sdlog = 1)\n  \n  # return a tibble with the result\n  tibble(\n    iteration = iteration,\n    median_val = median(sample_data)\n  )\n}\n\n\n# always test the function at least once before parallelizing\n\nsimulate_median(iteration = 1)\n\n\ntic(\"Sequential Purrr\")\nset.seed(405)\nresults_seq &lt;- 1:1e4 |&gt; \n  purrr::map_dfr(.f = simulate_median)\ntoc()\n\n\ntic(\"Parallel Furrr\")\nset.seed(405)\nresults_par &lt;- 1:1e4 |&gt; \n  furrr::future_map_dfr(.f = simulate_median, .options = furrr_options(seed = TRUE))\ntoc()",
+    "crumbs": [
+      "Code Performance",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Code Performance</span>"
+    ]
+  },
+  {
+    "objectID": "CodePerformance.html#efficient-file-handling",
+    "href": "CodePerformance.html#efficient-file-handling",
+    "title": "9  Code Performance",
+    "section": "9.5 efficient file handling",
+    "text": "9.5 efficient file handling\n\n# load the packages\nlibrary(tidyverse)     # for data manipulation and writing CSV files\nlibrary(nanoparquet)   # for writing Parquet files in R\n\n\nwrite_csv(results_seq, \"results_seq.csv\")\n\nwrite_parquet(results_seq, \"results_seq.parquet\")\n\n\nread_bench &lt;- bench::mark(\n  csv = read_csv(\"results_seq.csv\", show_col_types = FALSE),\n  parquet = read_parquet(\"results_seq.parquet\"),\n  iterations = 15,\n  check = FALSE\n)\n\nread_bench |&gt; select(expression, median)\n\nplot(read_bench)",
+    "crumbs": [
+      "Code Performance",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Code Performance</span>"
+    ]
+  },
+  {
+    "objectID": "Rpackage.html",
+    "href": "Rpackage.html",
+    "title": "10  Building an R Package",
+    "section": "",
+    "text": "10.1 check for available package names\n# check available package names (chapter 4.1.2 of R Packages (2e))\ninstall.packages(c(\"available\", \"pak\"))\navailable(\"package_name\")\npak::pkg_name_check(\"package_name\")",
+    "crumbs": [
+      "R Package",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Building an R Package</span>"
+    ]
+  },
+  {
+    "objectID": "Rpackage.html#create-package",
+    "href": "Rpackage.html#create-package",
+    "title": "10  Building an R Package",
+    "section": "10.2 create package",
+    "text": "10.2 create package\n\n# start by creating a GitHub repo with the package name\n# clone that repo to your Posit Cloud\n\n\n# install some packages which are required for package development\ninstall.packages(c(\"devtools\", \"checkmate\", \"tidyverse\", \"remotes\"))\n# devtools - meta package for package development in R\n# checkmate - to build assertions (make sure that our functions are working fine)\n# tidyverse - to build one of our functions\n# remotes is a package that is required to install a package\n\n\nlibrary(devtools)\n\n\n# create the package files (basic)\nusethis::create_package(\"/cloud/project\")\n# make sure to hit the 'Yes' option and check the files/folders that have been created\n# add your package name to the Package field in the DESCRIPTION file\n# commit and push to GitHub\n\n\nlibrary(devtools)",
+    "crumbs": [
+      "R Package",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Building an R Package</span>"
+    ]
+  },
+  {
+    "objectID": "Rpackage.html#create-functions-within-the-package",
+    "href": "Rpackage.html#create-functions-within-the-package",
+    "title": "10  Building an R Package",
+    "section": "10.3 create functions within the package",
+    "text": "10.3 create functions within the package\n\n# existing function called strsplit that comes with base R\nstrsplit(\"alpha, bravo\", split = \",\")\n# this returns by default a list which is annoying\nstrsplit(\"alpha, bravo\", split = \",\")[[1]]\n# we wiLl create a new function called strsplit1 that returns a vector instead of a list\n\n\n# make sure the diRectory is okay\ngetwd() # should see /cloud/project\n\n\n# every function in an R package needs to be written in an .R script with the same name\n# which will be stored in the R directory\nusethis::use_r(\"strsplit1\")\n# type in function R script\nstrsplit1 &lt;- function(x, split)\n{\n  strsplit(x, split = split)[[1]]\n}\n\n\ndevtools::load_all()\n# loads the package from source directly into the current environment\n# temporarily builds and installs the package, allows us to verify our functions\n\n\n# check if your functions works\nstrsplit1(\"alpha, bravo\", split = \",\")\n# commit and push to GitHub\n\n\n# create the min_max_scale function\nusethis::use_r(\"min_max_scale\")\n# type in function R script\nmin_max_scale &lt;- function(x)\n{\n  (x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))\n}\n\ndevtools::load_all()\n\n# check\nmin_max_scale(1:5)\n# commit and push to GitHub\n\n\n# create a personal theme (theme_academic)\nusethis::use_r(\"theme_academic\")\n# type in function R script\ntheme_academic &lt;- function(base_size = 12) {\n  ggplot2::theme_classic(base_size = base_size) +\n    ggplot2::theme(\n      plot.title = ggplot2::element_text(face = \"bold\", hjust = 0.5),\n      panel.grid.major = ggplot2::element_blank(),\n      panel.grid.minor = ggplot2::element_blank()\n    )\n}\n# specifically mention what external packages are used to build functions in your package\nusethis::use_package(\"ggplot2\")\n# check Imports field in DESCRIPTION file\n\ndevtools::load_all()\n\n# check\nlibrary(ggplot2)\np &lt;- ggplot(mtcars) + geom_point(aes(x = mpg, y = hp)) + labs(title = \"plot title\")\np\np + theme_academic()\n# commit and push to GitHub\n\n\n# so we have created the barebones version of all our three functions\n\n\n# we updated the DESCRIPTION file (changes to title, authors, description)\n# most of the other things will get updated on their own\ndevtools::check()\n\n# run the above check almost after every step\n# should get 0 errors, 0 warnings, 0 notes\n# right now we get a warning/note about license",
+    "crumbs": [
+      "R Package",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Building an R Package</span>"
+    ]
+  },
+  {
+    "objectID": "Rpackage.html#add-license",
+    "href": "Rpackage.html#add-license",
+    "title": "10  Building an R Package",
+    "section": "10.4 add license",
+    "text": "10.4 add license\n\n# let's add a license\nusethis:: use_mit_license()\n# we won't change the LICENSE and LICENSE.md file by hand\ndevtools::check()  # check again\n# commit and push to GitHub",
+    "crumbs": [
+      "R Package",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Building an R Package</span>"
+    ]
+  },
+  {
+    "objectID": "Rpackage.html#add-documentations",
+    "href": "Rpackage.html#add-documentations",
+    "title": "10  Building an R Package",
+    "section": "10.5 add documentations",
+    "text": "10.5 add documentations\n\n# we are now going add documentations to our functions\n# go to the function .R script &gt; Code&gt; Insert roxygen skeleton\n# make sure to have the @export tag\n# think of a user when you are writing documentations\ndevtools::document()  # this needs to be run everytime we update the documentation\ndevtools::load_all()\ndevtools::check()\n# commit and push to GitHub",
+    "crumbs": [
+      "R Package",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Building an R Package</span>"
+    ]
+  },
+  {
+    "objectID": "Rpackage.html#add-assertions",
+    "href": "Rpackage.html#add-assertions",
+    "title": "10  Building an R Package",
+    "section": "10.6 add assertions",
+    "text": "10.6 add assertions\n\n# we will work with assertions from the checkmate package\n# first check of the function arguments so that it runs smoothly\n# checkmate provides somewhat better messages\nusethis::use_package(\"checkmate\")\n# we will write assertions for each input of each function\n# see help pages of ?assert_\ndevtools::load_all()\n# add assertions to each function and run devtools::load_all() after each change\n# tryto break your function and see if the assertion works\ndevtools::document()\ndevtools::check()\n# commit and push to GitHub",
+    "crumbs": [
+      "R Package",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Building an R Package</span>"
+    ]
+  },
+  {
+    "objectID": "Rpackage.html#unit-testing",
+    "href": "Rpackage.html#unit-testing",
+    "title": "10  Building an R Package",
+    "section": "10.7 unit testing",
+    "text": "10.7 unit testing\n\n# unit testing of functions\n# think about every possible sceanrio where your function can break\nusethis::use_testthat()\nusethis::use_test(\"strsplit1\")\n# geneartes a new file inside the testthat directory inside tests directory\n# we will delete the prepopulated message and write our own for our functions\n# see help pages of ?expect_\n# write your unit tests\ndevtools::load_all()\ndevtools::test()\n\n\nusethis::use_test(\"min_max_scale\")\ndevtools::load_all()\ndevtools::test()\n\n\nusethis::use_test(\"theme_academic\")\ndevtools::load_all()\ndevtools::test()\n\n\ndevtools::check()\n# commit and push to GitHub",
+    "crumbs": [
+      "R Package",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Building an R Package</span>"
+    ]
+  },
+  {
+    "objectID": "Rpackage.html#add-dataset",
+    "href": "Rpackage.html#add-dataset",
+    "title": "10  Building an R Package",
+    "section": "10.8 add dataset",
+    "text": "10.8 add dataset\n\n# add dataset to our package that can be exported and used by our users\n# first make sure that the dataset is created in your local Environment\ntoy_data &lt;- data.frame(\n  subject_id = 1:5,\n  reaction_time = c(1.2, 0.9, 1.5, 0.8, 1.1),\n  test_score = c(45, 82, 55, 91, 67),\n  recalled_words = c(\n    \"cat, dog, mouse\",\n    \"apple, banana\",\n    \"car, truck, bike, train\",\n    \"red, blue, green\",\n    \"sun, moon\"\n  )\n)\n\n\nusethis::use_data(toy_data)\n# if exporting big daatsets, look into the compress argument of use_this\n\n\n# we will save the data generating script into a file (for reproducibility)\n# very important if you generate datasets that need random generation (set a seed)\nusethis::use_data_raw(\"toy_data_code\")\n# anytime you update the toy_data with new code, make sure to update the toy_data_code file with the new code\n\n\n# documentation for toy_data\nusethis::use_r(\"toy_data\")\n# seems to be done manually\n# this will build the documentation\n# make sure that the last line has the name of the dataset inside \"\"\n# mention the units of your variables\n\n\n# if we export multiple datasets, R puts them all in sysdata.rda file\n# in the NAMESPACE, it doesn't specifically mention the dataset to be exported\n\ndevtools::document()\ndevtools::load_all()  # display the dataset and check help page\ndevtools::check()\n# commit and push to GitHub\n\n\n# for any file that is typically not an rda file, like csv files\n# we will need to create a directory called inst/extdata",
+    "crumbs": [
+      "R Package",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Building an R Package</span>"
+    ]
+  },
+  {
+    "objectID": "Rpackage.html#add-readme",
+    "href": "Rpackage.html#add-readme",
+    "title": "10  Building an R Package",
+    "section": "10.9 add README",
+    "text": "10.9 add README\n\n# we will build the README for the GitHub site and also for our website\nusethis::use_readme_rmd()\n# try not to install any other pacakges (since those packages have not been mentioned in Imports in DESCRIPTION)\ndevtools::build_readme()\n# use this build function repreatedly whenever you update the README.Rmd\ndevtools::check()\n# commit and push to GitHub\n# check GitHub",
+    "crumbs": [
+      "R Package",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Building an R Package</span>"
+    ]
+  },
+  {
+    "objectID": "Rpackage.html#addbuild-vignettes",
+    "href": "Rpackage.html#addbuild-vignettes",
+    "title": "10  Building an R Package",
+    "section": "10.10 add/build vignettes",
+    "text": "10.10 add/build vignettes\n\n# build a vignette\n# these are specific instrcutions/notes about very specific part of your package\n# for example check out the ggplot2 vignettes from Articles dropdown of the package website\nusethis::use_vignette(name = \"intro-to-toypackage\", title = \"Introduction to toypackage\")\ndevtools::build_vignettes()  # to convert the RMd into website readable html\ndevtools::check()\n# commit and push to GitHub",
+    "crumbs": [
+      "R Package",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Building an R Package</span>"
+    ]
+  },
+  {
+    "objectID": "Rpackage.html#build-package-website",
+    "href": "Rpackage.html#build-package-website",
+    "title": "10  Building an R Package",
+    "section": "10.11 build package website",
+    "text": "10.11 build package website\n\n# build the package website\n# pkgdown package this is how the website will be built\nusethis::use_pkgdown()  # run this only once\n# the website will also use GitHub pages like it did for our personal website\npkgdown::build_site()   # run this everytime there is an update to anything inside your package\nusethis::use_pkgdown_github_pages()  # notice the changes, run this only once\ndevtools::check()\n# commit and push to GitHub",
+    "crumbs": [
+      "R Package",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Building an R Package</span>"
     ]
   }
 ]
