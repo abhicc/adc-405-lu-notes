@@ -1,0 +1,342 @@
+---
+title: "Building an R Package"
+execute: 
+  eval: false
+  warning: false
+  message: false
+  cache: true
+---
+
+## check for available package names
+
+```{r}
+# check available package names (chapter 4.1.2 of R Packages (2e))
+install.packages(c("available", "pak"))
+available("package_name")
+pak::pkg_name_check("package_name")
+
+```
+
+## create package
+
+```{r}
+# start by creating a GitHub repo with the package name
+# clone that repo to your Posit Cloud
+
+```
+
+```{r}
+# install some packages which are required for package development
+install.packages(c("devtools", "checkmate", "tidyverse", "remotes"))
+# devtools - meta package for package development in R
+# checkmate - to build assertions (make sure that our functions are working fine)
+# tidyverse - to build one of our functions
+# remotes is a package that is required to install a package
+
+```
+
+```{r}
+library(devtools)
+
+```
+
+```{r}
+# create the package files (basic)
+usethis::create_package("/cloud/project")
+# make sure to hit the 'Yes' option and check the files/folders that have been created
+# add your package name to the Package field in the DESCRIPTION file
+# commit and push to GitHub
+
+```
+
+```{r}
+library(devtools)
+
+```
+
+## create functions within the package
+
+```{r}
+# existing function called strsplit that comes with base R
+strsplit("alpha, bravo", split = ",")
+# this returns by default a list which is annoying
+strsplit("alpha, bravo", split = ",")[[1]]
+# we wiLl create a new function called strsplit1 that returns a vector instead of a list
+
+```
+
+```{r}
+# make sure the diRectory is okay
+getwd() # should see /cloud/project
+
+```
+
+```{r}
+# every function in an R package needs to be written in an .R script with the same name
+# which will be stored in the R directory
+usethis::use_r("strsplit1")
+# type in function R script
+strsplit1 <- function(x, split)
+{
+  strsplit(x, split = split)[[1]]
+}
+
+```
+
+```{r}
+devtools::load_all()
+# loads the package from source directly into the current environment
+# temporarily builds and installs the package, allows us to verify our functions
+
+```
+
+```{r}
+# check if your functions works
+strsplit1("alpha, bravo", split = ",")
+# commit and push to GitHub
+
+```
+
+```{r}
+# create the min_max_scale function
+usethis::use_r("min_max_scale")
+# type in function R script
+min_max_scale <- function(x)
+{
+  (x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
+}
+
+devtools::load_all()
+
+# check
+min_max_scale(1:5)
+# commit and push to GitHub
+
+```
+
+```{r}
+# create a personal theme (theme_academic)
+usethis::use_r("theme_academic")
+# type in function R script
+theme_academic <- function(base_size = 12) {
+  ggplot2::theme_classic(base_size = base_size) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(face = "bold", hjust = 0.5),
+      panel.grid.major = ggplot2::element_blank(),
+      panel.grid.minor = ggplot2::element_blank()
+    )
+}
+# specifically mention what external packages are used to build functions in your package
+usethis::use_package("ggplot2")
+# check Imports field in DESCRIPTION file
+
+devtools::load_all()
+
+# check
+library(ggplot2)
+p <- ggplot(mtcars) + geom_point(aes(x = mpg, y = hp)) + labs(title = "plot title")
+p
+p + theme_academic()
+# commit and push to GitHub
+
+```
+
+```{r}
+# so we have created the barebones version of all our three functions
+
+```
+
+```{r}
+# we updated the DESCRIPTION file (changes to title, authors, description)
+# most of the other things will get updated on their own
+devtools::check()
+
+# run the above check almost after every step
+# should get 0 errors, 0 warnings, 0 notes
+# right now we get a warning/note about license
+
+```
+
+## add license
+
+```{r}
+# let's add a license
+usethis:: use_mit_license()
+# we won't change the LICENSE and LICENSE.md file by hand
+devtools::check()  # check again
+# commit and push to GitHub
+
+```
+
+## add documentations
+
+```{r}
+# we are now going add documentations to our functions
+# go to the function .R script > Code> Insert roxygen skeleton
+# make sure to have the @export tag
+# think of a user when you are writing documentations
+devtools::document()  # this needs to be run everytime we update the documentation
+devtools::load_all()
+devtools::check()
+# commit and push to GitHub
+
+```
+
+## add assertions
+
+```{r}
+# we will work with assertions from the checkmate package
+# first check of the function arguments so that it runs smoothly
+# checkmate provides somewhat better messages
+usethis::use_package("checkmate")
+# we will write assertions for each input of each function
+# see help pages of ?assert_
+devtools::load_all()
+# add assertions to each function and run devtools::load_all() after each change
+# tryto break your function and see if the assertion works
+devtools::document()
+devtools::check()
+# commit and push to GitHub
+
+```
+
+
+## unit testing
+
+```{r}
+# unit testing of functions
+# think about every possible sceanrio where your function can break
+usethis::use_testthat()
+usethis::use_test("strsplit1")
+# geneartes a new file inside the testthat directory inside tests directory
+# we will delete the prepopulated message and write our own for our functions
+# see help pages of ?expect_
+# write your unit tests
+devtools::load_all()
+devtools::test()
+
+```
+
+```{r}
+usethis::use_test("min_max_scale")
+devtools::load_all()
+devtools::test()
+
+```
+
+```{r}
+usethis::use_test("theme_academic")
+devtools::load_all()
+devtools::test()
+
+```
+
+```{r}
+devtools::check()
+# commit and push to GitHub
+
+```
+
+
+## add dataset
+
+```{r}
+# add dataset to our package that can be exported and used by our users
+# first make sure that the dataset is created in your local Environment
+toy_data <- data.frame(
+  subject_id = 1:5,
+  reaction_time = c(1.2, 0.9, 1.5, 0.8, 1.1),
+  test_score = c(45, 82, 55, 91, 67),
+  recalled_words = c(
+    "cat, dog, mouse",
+    "apple, banana",
+    "car, truck, bike, train",
+    "red, blue, green",
+    "sun, moon"
+  )
+)
+
+```
+
+```{r}
+usethis::use_data(toy_data)
+# if exporting big daatsets, look into the compress argument of use_this
+
+```
+
+```{r}
+# we will save the data generating script into a file (for reproducibility)
+# very important if you generate datasets that need random generation (set a seed)
+usethis::use_data_raw("toy_data_code")
+# anytime you update the toy_data with new code, make sure to update the toy_data_code file with the new code
+
+```
+
+```{r}
+# documentation for toy_data
+usethis::use_r("toy_data")
+# seems to be done manually
+# this will build the documentation
+# make sure that the last line has the name of the dataset inside ""
+# mention the units of your variables
+
+```
+
+```{r}
+# if we export multiple datasets, R puts them all in sysdata.rda file
+# in the NAMESPACE, it doesn't specifically mention the dataset to be exported
+
+devtools::document()
+devtools::load_all()  # display the dataset and check help page
+devtools::check()
+# commit and push to GitHub
+
+```
+
+```{r}
+# for any file that is typically not an rda file, like csv files
+# we will need to create a directory called inst/extdata
+
+```
+
+## add README
+
+```{r}
+# we will build the README for the GitHub site and also for our website
+usethis::use_readme_rmd()
+# try not to install any other pacakges (since those packages have not been mentioned in Imports in DESCRIPTION)
+devtools::build_readme()
+# use this build function repreatedly whenever you update the README.Rmd
+devtools::check()
+# commit and push to GitHub
+# check GitHub
+
+```
+
+## add/build vignettes
+
+```{r}
+# build a vignette
+# these are specific instrcutions/notes about very specific part of your package
+# for example check out the ggplot2 vignettes from Articles dropdown of the package website
+usethis::use_vignette(name = "intro-to-toypackage", title = "Introduction to toypackage")
+devtools::build_vignettes()  # to convert the RMd into website readable html
+devtools::check()
+# commit and push to GitHub
+
+```
+
+## build package website
+
+```{r}
+# build the package website
+# pkgdown package this is how the website will be built
+usethis::use_pkgdown()  # run this only once
+# the website will also use GitHub pages like it did for our personal website
+pkgdown::build_site()   # run this everytime there is an update to anything inside your package
+usethis::use_pkgdown_github_pages()  # notice the changes, run this only once
+devtools::check()
+# commit and push to GitHub
+
+```
+

@@ -37,6 +37,10 @@ book:
       chapters: 
         - CodePerformance.qmd
         
+    - part: R Package
+      chapters: 
+        - Rpackage.qmd    
+        
         
         
 #    - intro.qmd
