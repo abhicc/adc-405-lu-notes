@@ -1,23 +1,27 @@
 ---
-title: "Text Analysis II - Case Study of Donald Trump's tweets during the 2016 US presidential election"
-format: pdf
-editor: visual
+title: "Case Study of Donald Trump's tweets during the 2016 US presidential election"
+execute: 
+  eval: false
+  warning: false
+  message: false
+  cache: true
 ---
 
-# ------------------------------------------------------------------------------
-# resources
-
-* [Trump Twitter Archive](https://www.thetrumparchive.com/)
-
-* [Todd Vaziri's Tweet](https://x.com/tvaziri/status/762005541388378112/photo/1)
-
-* [David Robinson's Blog Post](http://varianceexplained.org/r/trump-tweets/)
-
-* [Text Mining With R](https://www.tidytextmining.com/)
 
 
-# ------------------------------------------------------------------------------
-# packages
+## resources
+
+- [Trump Twitter Archive](https://www.thetrumparchive.com/)
+
+- [Todd Vaziri's Tweet](https://x.com/tvaziri/status/762005541388378112/photo/1)
+
+- [David Robinson's Blog Post](http://varianceexplained.org/r/trump-tweets/)
+
+- [Text Mining With R](https://www.tidytextmining.com/)
+
+
+
+## packages
 
 ```{r}
 library(tidyverse)
@@ -28,10 +32,10 @@ library(dslabs)
 ```
 
 
-# ------------------------------------------------------------------------------
-# data
 
-Our data come from the *dslabs* package. 
+## data
+
+Our data come from the *dslabs* package.
 
 ```{r}
 
@@ -43,20 +47,17 @@ glimpse(trump_tweets)
 
 ```
 
-
 ```{r}
 
 range(trump_tweets$created_at)
 
 ```
 
-
 ```{r}
 
 trump_tweets$text[16413]
 
 ```
-
 
 ```{r}
 
@@ -65,7 +66,6 @@ trump_tweets |>
   arrange(desc(n)) 
 
 ```
-
 
 For our case study, we are interested in what happened during the 2016 campaign, so for this analysis we will focus on what was tweeted between the day Trump announced his campaign and election day. Also, we only keep tweets from Android or iPhone, and filter out retweets.
 
@@ -82,7 +82,6 @@ campaign_tweets <- trump_tweets |>
 
 ```
 
-
 ```{r}
 
 campaign_tweets |>
@@ -91,10 +90,10 @@ campaign_tweets |>
 ```
 
 
-# ------------------------------------------------------------------------------
-# some initial exploration
 
-We explore the possibility that two different groups were tweeting from these devices. 
+## some initial exploration
+
+We explore the possibility that two different groups were tweeting from these devices.
 
 ```{r}
 
@@ -103,7 +102,6 @@ campaign_tweets |>
   count(source, hour)
 
 ```
-
 
 ```{r}
 
@@ -117,7 +115,6 @@ android_vs_iphone_hourly_props
 
 ```
 
-
 ```{r}
 
 android_vs_iphone_hourly_props |>
@@ -130,8 +127,8 @@ android_vs_iphone_hourly_props |>
 ```
 
 
-# ------------------------------------------------------------------------------
-# tokens
+
+## tokens
 
 ```{r}
 
@@ -141,7 +138,6 @@ campaign_tweets$text[i]
 
 ```
 
-
 ```{r}
 
 campaign_tweets[i,] |> 
@@ -149,7 +145,6 @@ campaign_tweets[i,] |>
   dplyr::pull(word) 
 
 ```
-
 
 ```{r}
 
@@ -162,7 +157,6 @@ campaign_tweets[i,] |>
 
 ```
 
-
 ```{r}
 
 tweet_words <- campaign_tweets |>
@@ -170,7 +164,6 @@ tweet_words <- campaign_tweets |>
   tidytext::unnest_tokens(output = word, input = text, token = "words")
 
 ```
-
 
 ```{r}
 
@@ -180,8 +173,7 @@ tweet_words |>
 
 ```
 
-
-#### stop words
+## stop words
 
 ```{r}
 
@@ -190,7 +182,6 @@ data(stop_words)
 ?stop_words
 
 ```
-
 
 ```{r}
 
@@ -203,7 +194,6 @@ tweet_words |>
   count(word) 
 
 ```
-
 
 ```{r}
 
@@ -221,8 +211,7 @@ tweet_words |>
 
 ```
 
-
-#### further exploration
+## further exploration
 
 ```{r}
 
@@ -233,7 +222,6 @@ android_vs_iphone
 
 ```
 
-
 ```{r}
 
 android_vs_iphone <- tweet_words |>
@@ -243,7 +231,6 @@ android_vs_iphone <- tweet_words |>
 android_vs_iphone
 
 ```
-
 
 ```{r}
 
@@ -258,7 +245,6 @@ android_vs_iphone
 
 ```
 
-
 ```{r}
 
 # for words appearing at least 100 times in total, here are the ten highest percent differences for Android
@@ -272,7 +258,6 @@ top_10_android
 
 ```
 
-
 ```{r}
 
 # and the top ten for iPhone
@@ -285,7 +270,6 @@ top_10_iphone <- android_vs_iphone |>
 top_10_iphone
 
 ```
-
 
 ```{r}
 
@@ -301,8 +285,8 @@ top_10_android |>
 ```
 
 
-# ------------------------------------------------------------------------------
-# sentiment analysis
+
+## sentiment analysis
 
 ```{r}
 
@@ -314,7 +298,6 @@ tidytext::get_sentiments("nrc")
 
 ```
 
-
 ```{r}
 
 nrc <- tidytext::get_sentiments("nrc")
@@ -322,7 +305,6 @@ nrc <- tidytext::get_sentiments("nrc")
 nrc |> count(sentiment)
 
 ```
-
 
 ```{r}
 
@@ -333,7 +315,6 @@ tweet_words |>
 
 ```
 
-
 ```{r}
 
 sentiment_counts <- tweet_words |>
@@ -343,7 +324,6 @@ sentiment_counts <- tweet_words |>
 sentiment_counts
 
 ```
-
 
 ```{r}
 
@@ -357,7 +337,6 @@ sentiment_counts
 
 ```
 
-
 ```{r}
 
 sentiment_counts <- sentiment_counts |>
@@ -369,7 +348,6 @@ sentiment_counts <- sentiment_counts |>
 sentiment_counts
 
 ```
-
 
 ```{r}
 
@@ -392,4 +370,3 @@ android_vs_iphone |>
 ```
 
 
-# ------------------------------------------------------------------------------

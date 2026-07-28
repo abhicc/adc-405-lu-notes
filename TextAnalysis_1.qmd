@@ -1,27 +1,31 @@
 ---
-title: "Text Analysis I - Case Study of Shakepearse's Macbeth using Regular Expressions"
-format: pdf
-editor: visual
+title: "Case Study of Shakepearse's Macbeth using Regular Expressions"
+execute: 
+  eval: false
+  warning: false
+  message: false
+  cache: true
 ---
 
-# ------------------------------------------------------------------------------
-# resources
-
-* [Text Mining with R](https://www.tidytextmining.com/)
-
-* [Modern Data Science with R (3e) - Chapter 19](https://mdsr-book.github.io/mdsr3e/)
 
 
-# ------------------------------------------------------------------------------
-# packages
+## resources
+
+- [Text Mining with R](https://www.tidytextmining.com/)
+
+- [Modern Data Science with R (3e) - Chapter 19](https://mdsr-book.github.io/mdsr3e/)
+
+
+
+## packages
 
 ```{r}
 library(tidyverse)
 ```
 
 
-# ------------------------------------------------------------------------------
-# data
+
+## data
 
 Our data comes from [Project Gutenberg](https://www.gutenberg.org/), a large repository of free eBooks. We will be working with the text of Shakespeare’s play Macbeth, which is available at https://www.gutenberg.org/cache/epub/1129/pg1129.txt. The text is in the public domain, so we are free to use it for our analysis.
 
@@ -37,8 +41,7 @@ book <- gutenberg_download(1129, meta_fields = "title")
 
 ```
 
-
-For our case study, we will be working with the raw text of the play, which is available in the `mdsr` package. 
+For our case study, we will be working with the raw text of the play, which is available in the `mdsr` package.
 
 ```{r}
 
@@ -49,7 +52,6 @@ data(Macbeth_raw)
 ?Macbeth_raw
 
 ```
-
 
 ```{r}
 
@@ -64,8 +66,8 @@ macbeth[300:310]
 ```
 
 
-# ------------------------------------------------------------------------------
-# strings and regular expressions
+
+## strings and regular expressions
 
 ```{r}
 # how many times does the character Macbeth speak in the play?
@@ -79,7 +81,6 @@ head(macbeth_lines)
 
 ```
 
-
 ```{r}
 
 macbeth |>
@@ -87,11 +88,9 @@ macbeth |>
 
 ```
 
+## about regular expressions grammar
 
-
-# about regular expressions grammar
-
-#### metacharacter
+### metacharacter
 
 ```{r}
 
@@ -101,7 +100,6 @@ macbeth |>
 
 ```
 
-
 ```{r}
 
 macbeth |>
@@ -110,8 +108,7 @@ macbeth |>
 
 ```
 
-
-#### character sets
+### character sets
 
 ```{r}
 
@@ -121,8 +118,7 @@ macbeth |>
 
 ```
 
-
-#### alternation
+### alternation
 
 ```{r}
 
@@ -132,8 +128,7 @@ macbeth |>
 
 ```
 
-
-#### anchors (power-dollar)
+### anchors (power-dollar)
 
 ```{r}
 
@@ -143,7 +138,6 @@ macbeth |>
 
 ```
 
-
 ```{r}
 
 macbeth |>
@@ -152,8 +146,7 @@ macbeth |>
 
 ```
 
-
-#### repetitions
+### repetitions
 
 ```{r}
 
@@ -186,9 +179,8 @@ macbeth |>
 ```
 
 
-# ------------------------------------------------------------------------------
-# a case study - life and death in Macbeth and speaking patterns
 
+## a case study - life and death in Macbeth and speaking patterns
 
 ```{r}
 
@@ -202,7 +194,6 @@ macbeth_chars <- tribble(
   mutate(speaks = purrr::map(regexp, str_detect, string = macbeth))
 
 ```
-
 
 ```{r}
 
@@ -218,7 +209,6 @@ glimpse(speaker_freq)
 
 ```
 
-
 ```{r}
 
 acts <- tibble(
@@ -228,7 +218,6 @@ acts <- tibble(
 )
 
 ```
-
 
 ```{r}
 
@@ -255,4 +244,3 @@ ggplot(data = speaker_freq, aes(x = line, y = speaks)) +
 ```
 
 
-# ------------------------------------------------------------------------------

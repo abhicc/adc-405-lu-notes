@@ -1,17 +1,21 @@
 ---
-title: "Text Analysis III - Case Study of Data Science Papers from arXiv.org"
-format: pdf
-editor: visual
+title: "Case Study of Data Science Papers from arXiv.org"
+execute: 
+  eval: false
+  warning: false
+  message: false
+  cache: true
 ---
 
-# ------------------------------------------------------------------------------
-# resources
-
-* [arXiv.org](https://arxiv.org/)
 
 
-# ------------------------------------------------------------------------------
-# packages
+## resources
+
+- [arXiv.org](https://arxiv.org/)
+
+
+
+## packages
 
 ```{r}
 library(tidyverse)
@@ -22,10 +26,10 @@ library(mdsr)
 ```
 
 
-# ------------------------------------------------------------------------------
-# data
 
-We can import data using the *aRxiv* package. 
+## data
+
+We can import data using the **aRxiv** package.
 
 ```{r}
 
@@ -41,8 +45,7 @@ glimpse(df)
 
 ```
 
-
-For this case study we will use some already-collected data from the *mdsr* package.
+For this case study we will use some already-collected data from the **mdsr** package.
 
 ```{r}
 
@@ -56,8 +59,7 @@ glimpse(DataSciencePapers)
 
 ```
 
-
-### initial data exploration and cleaning
+## initial data exploration and cleaning
 
 ```{r}
 
@@ -71,13 +73,11 @@ glimpse(DataSciencePapers)
 
 ```
 
-
 ```{r}
 
 mosaic::tally(~ year(submitted), data = DataSciencePapers)
 
 ```
-
 
 ```{r}
 
@@ -87,7 +87,6 @@ DataSciencePapers |>
 
 ```
 
-
 ```{r}
 
 DataSciencePapers |>
@@ -95,7 +94,6 @@ DataSciencePapers |>
   count()
 
 ```
-
 
 ```{r}
 
@@ -107,8 +105,7 @@ mosaic::tally(x = ~field, margins = TRUE, data = DataSciencePapers) |>
 
 ```
 
-
-### corpora and tokenization
+## corpora and tokenization
 
 ```{r}
 
@@ -117,7 +114,6 @@ DataSciencePapers |>
   count(id, word, sort = TRUE)
 
 ```
-
 
 ```{r}
 
@@ -130,7 +126,6 @@ arxiv_words |>
 
 ```
 
-
 ```{r}
 
 arxiv_abstracts <- arxiv_words |>
@@ -142,8 +137,7 @@ arxiv_papers <- DataSciencePapers |>
 
 ```
 
-
-### wordcloud
+## wordcloud
 
 ```{r}
 
@@ -161,8 +155,7 @@ arxiv_papers |>
 
 ```
 
-
-### bigrams
+## bigrams
 
 ```{r}
 
@@ -182,8 +175,7 @@ arxiv_bigrams |>
 
 ```
 
-
-### tf-idf and document term matrices 
+## tf-idf and document term matrices
 
 ```{r}
 
@@ -193,7 +185,6 @@ arxiv_words |>
   head()
 
 ```
-
 
 ```{r}
 
@@ -205,7 +196,6 @@ tidy_DTM
 
 ```
 
-
 ```{r}
 
 tidy_DTM |>
@@ -213,7 +203,6 @@ tidy_DTM |>
   head()
 
 ```
-
 
 ```{r}
 
@@ -223,14 +212,12 @@ tidy_DTM |>
 
 ```
 
-
 ```{r}
 
 tidy_DTM |>
   filter(word == "wildfire")
 
 ```
-
 
 ```{r}
 
@@ -242,14 +229,12 @@ arxiv_papers |>
 
 ```
 
-
 ```{r}
 
 tidy_DTM |>
   filter(word == "implications")
 
 ```
-
 
 ```{r}
 
@@ -259,7 +244,6 @@ tidy_DTM |>
   head()
 
 ```
-
 
 ```{r}
 
@@ -272,4 +256,3 @@ tm_DTM
 ```
 
 
-# ------------------------------------------------------------------------------

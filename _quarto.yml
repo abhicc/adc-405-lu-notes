@@ -5,12 +5,45 @@ book:
   title: "Advanced Data Computing (405 @ LU) Notes"
   author: "Abhishek Chakraborty"
   date: "7/24/2026"
+  reader-mode: true
+  
+  page-footer:
+    left: |
+      Advanced Data Computing (405) Course Notes by Abhishek Chakraborty.
+    right: |
+      This book was built with <a href="https://quarto.org/">Quarto</a>.
+  
   chapters:
     - index.qmd
-    - sql_1.qmd
-    - intro.qmd
-    - summary.qmd
-    - references.qmd
+    
+    - part: SQL
+      chapters: 
+        - sql_1.qmd
+        - sql_2.qmd
+        - sql_3.qmd
+        - sql_4.qmd
+        
+    - part: Text Analysis
+      chapters: 
+        - TextAnalysis_1.qmd
+        - TextAnalysis_2.qmd
+        - TextAnalysis_3.qmd
+        
+    - part: Geospatial Data
+      chapters: 
+        - sql_1.qmd
+        - sql_2.qmd
+        
+    - part: Code Performance
+      chapters: 
+        - sql_1.qmd
+        - sql_2.qmd
+        
+        
+        
+#    - intro.qmd
+#    - summary.qmd
+#    - references.qmd
 
 bibliography: references.bib
 

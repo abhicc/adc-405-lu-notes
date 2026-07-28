@@ -1,5 +1,5 @@
 ---
-title: "SQL I: Accessing Databases and Database Tables"
+title: "Accessing Databases and Database Tables"
 execute: 
   eval: false
   warning: false

@@ -1,10 +1,14 @@
 ---
-title: "SQL III: Joins, Unions, and Subqueries"
-format: pdf
+title: "Joins, Unions, and Subqueries"
+execute: 
+  eval: false
+  warning: false
+  message: false
+  cache: true
 ---
 
-# ------------------------------------------------------------------------------
-# load packages and connect to database server
+
+## load packages and connect to database server
 
 ```{r}
 #| warning: false
@@ -42,14 +46,14 @@ airports <- dplyr::tbl(con_air, "airports")
 
 
 ```{sql}
-#| connection: con_air
+--| connection: con_air
 
 DESCRIBE flights;
 
 ```
 
 ```{sql}
-#| connection: con_air
+--| connection: con_air
 
 SELECT * FROM flights LIMIT 10;
 ```
@@ -57,14 +61,14 @@ SELECT * FROM flights LIMIT 10;
 
 
 ```{sql}
-#| connection: con_air
+--| connection: con_air
 
 DESCRIBE carriers;
 
 ```
 
 ```{sql}
-#| connection: con_air
+--| connection: con_air
 
 SELECT * FROM carriers LIMIT 100;
 ```
@@ -72,22 +76,22 @@ SELECT * FROM carriers LIMIT 100;
 
 
 ```{sql}
-#| connection: con_air
+--| connection: con_air
 
 DESCRIBE airports;
 
 ```
 
 ```{sql}
-#| connection: con_air
+--| connection: con_air
 
 SELECT * FROM airports LIMIT 100;
 ```
 
 
 
-# ------------------------------------------------------------------------------
-# Joins
+
+## Joins
 
 In general, there are four pieces of information that you need to specify in order to join two tables:
 
@@ -99,46 +103,33 @@ In general, there are four pieces of information that you need to specify in ord
 
 The following join types are available in MySQL dialect of SQL:
 
-* *JOIN*
-* *LEFT JOIN*
-* *RIGHT JOIN*
-* *CROSS JOIN*
+* **JOIN**
+* **LEFT JOIN**
+* **RIGHT JOIN**
+* **CROSS JOIN**
 
 
-```{sql connection=con_air}
+```{sql connection="con_air"}
 
-# access airport names for flights that flew out of Appleton in 2013
-
-
-
-```
-
-
-```{sql connection=con_air}
-
-# access both airport and carrier names for flights that flew out of Appleton in 2013
+-- access airport names for flights that flew out of Appleton in 2013
 
 
 
 ```
 
 
-```{sql connection=con_air}
+```{sql connection="con_air"}
 
-# using LEFT JOIN
+-- access both airport and carrier names for flights that flew out of Appleton in 2013
 
 
 
 ```
 
 
+```{sql connection="con_air"}
 
-# ------------------------------------------------------------------------------
-# Unions
-
-```{sql connection=con_air}
-
-# extract all flights that flew from ATW to MSP and from JFK to ORD on April 14, 2013
+-- using LEFT JOIN
 
 
 
@@ -146,12 +137,12 @@ The following join types are available in MySQL dialect of SQL:
 
 
 
-# ------------------------------------------------------------------------------
-# Subqueries
 
-```{sql connection=con_air}
+## Unions
 
-# count the number of flights that satisfy the criteria above
+```{sql connection="con_air"}
+
+-- extract all flights that flew from ATW to MSP and from JFK to ORD on April 14, 2013
 
 
 
@@ -159,7 +150,20 @@ The following join types are available in MySQL dialect of SQL:
 
 
 
-# ------------------------------------------------------------------------------
+
+## Subqueries
+
+```{sql connection="con_air"}
+
+-- count the number of flights that satisfy the criteria above
+
+
+
+```
+
+
+
+
 
 ```{r}
 # terminate the SQL connection
@@ -168,5 +172,5 @@ DBI::dbDisconnect(con_air, shutdown = TRUE)
 
 ```
 
-# ------------------------------------------------------------------------------
+
 

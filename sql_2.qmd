@@ -1,10 +1,14 @@
 ---
-title: "SQL II: Writing SQL queries"
-format: pdf
+title: "Writing SQL queries"
+execute: 
+  eval: false
+  warning: false
+  message: false
+  cache: true
 ---
 
-# ------------------------------------------------------------------------------
-# load packages and connect to database server
+
+## load packages and connect to database server
 
 ```{r}
 #| warning: false
@@ -37,7 +41,7 @@ flights <- dplyr::tbl(con_air, "flights")
 
 
 ```{sql}
-#| connection: con_air
+--| connection: con_air
 
 DESCRIBE flights;
 
@@ -45,8 +49,8 @@ DESCRIBE flights;
 
 
 
-# ------------------------------------------------------------------------------
-# SQL in R: Part 1 - the 'dbplyr' R package will directly translate 'dplyr' code into SQL
+
+## SQL in R: Part 1 - the 'dbplyr' R package will directly translate 'dplyr' code into SQL
 
 ```{r}
 
@@ -99,8 +103,8 @@ DBI::dbDisconnect(con_air, shutdown = TRUE)
 
 
 
-# ------------------------------------------------------------------------------
-# SQL in R: Part 2 - using the DBI R package to write SQL queries in r code chunks
+
+## SQL in R: Part 2 - using the DBI R package to write SQL queries in r code chunks
 
 ```{r}
 
@@ -127,12 +131,12 @@ DBI::dbDisconnect(con_air, shutdown = TRUE)
 
 
 
-# ------------------------------------------------------------------------------
-# SQL in R: Part 3 - writing SQL queries in sql code chunks
+
+## SQL in R: Part 3 - writing SQL queries in sql code chunks
 
 
 ```{sql}
-#| connection: con_air
+--| connection: con_air
 
 SELECT MIN(year) AS min_year, 
        MAX(year) AS max_year
@@ -142,7 +146,7 @@ FROM flights;
 
 
 ```{sql}
-#| connection: con_air
+--| connection: con_air
 
 SELECT *
 FROM flights
@@ -154,7 +158,7 @@ WHERE (year = 2013 AND
 
 
 ```{sql}
-#| connection: con_air
+--| connection: con_air
 
 SELECT * 
 FROM flights 
@@ -164,7 +168,7 @@ LIMIT 2;
 
 
 ```{sql}
-#| connection: con_air
+--| connection: con_air
 
 SELECT year, 
        COUNT(*) AS num_flights 
@@ -175,27 +179,27 @@ ORDER BY num_flights;
 ```
 
 
-Queries in SQL start with the *SELECT* keyword and consist of several clauses, which have to be written in this order:
+Queries in SQL start with the **SELECT** keyword and consist of several clauses, which have to be written in this order:
 
-* *SELECT* allows you to list the columns, or functions operating on columns, that you want to retrieve. 
+* **SELECT** allows you to list the columns, or functions operating on columns, that you want to retrieve. 
 
-* *FROM* specifies the table where the data are.
+* **FROM** specifies the table where the data are.
 
-* *JOIN* allows you to stitch together two or more tables using a key. 
+* **JOIN** allows you to stitch together two or more tables using a key. 
 
-* *WHERE* allows you to extract rows according to some criteria. 
+* **WHERE** allows you to extract rows according to some criteria. 
 
-* *GROUP BY* allows you to aggregate the records according to some shared value. 
+* **GROUP BY** allows you to aggregate the records according to some shared value. 
 
-* *HAVING* is like a WHERE clause that operates on the result set—not the original rows themselves. 
+* **HAVING** is like a WHERE clause that operates on the result set—not the original rows themselves. 
 
-* *ORDER BY* orders the rows of the result set. 
+* **ORDER BY** orders the rows of the result set. 
 
-* *LIMIT* restricts the number of rows in the output. 
+* **LIMIT** restricts the number of rows in the output. 
 
 
 ```{sql}
-#| connection: con_air
+--| connection: con_air
 
 DESCRIBE flights;
 
@@ -204,19 +208,9 @@ DESCRIBE flights;
 
 
 ```{sql}
-#| connection: con_air
+--| connection: con_air
 
-# display the first ten rows of the flights table
-
-
-
-```
-
-
-```{sql}
-#| connection: con_air
-
-# display year, month, day, origin, dep_time, sched_dep_time, dep_delay for the first ten rows of the flights table
+-- display the first ten rows of the flights table
 
 
 
@@ -224,19 +218,9 @@ DESCRIBE flights;
 
 
 ```{sql}
-#| connection: con_air
+--| connection: con_air
 
-# count the total number of rows in the flights table
-
-
-
-```
-
-
-```{sql}
-#| connection: con_air
-
-# extract all info about flights that flew from Appleton (ATW) to Chicago (ORD) in 2013
+-- display year, month, day, origin, dep_time, sched_dep_time, dep_delay for the first ten rows of the flights table
 
 
 
@@ -244,20 +228,9 @@ DESCRIBE flights;
 
 
 ```{sql}
-#| connection: con_air
+--| connection: con_air
 
-# count the number of flights from Appleton (ATW) for each year
-
-
-
-```
-
-
-```{sql}
-#| connection: con_air
-
-# which carriers flew from Appleton (ATW) to Chicago (ORD)
-# how many flights did they do per year
+-- count the total number of rows in the flights table
 
 
 
@@ -265,21 +238,9 @@ DESCRIBE flights;
 
 
 ```{sql}
-#| connection: con_air
+--| connection: con_air
 
-# for flights that flew from Appleton (ATW) to Chicago (ORD)
-# what was the latest flight for each carrier
-
-
-
-```
-
-
-```{sql}
-#| connection: con_air
-
-# for flights that flew from Appleton (ATW) 
-# which destination had the lowest average arrival delay time
+-- extract all info about flights that flew from Appleton (ATW) to Chicago (ORD) in 2013
 
 
 
@@ -287,11 +248,54 @@ DESCRIBE flights;
 
 
 ```{sql}
-#| connection: con_air
+--| connection: con_air
 
-# for flights that flew from Appleton (ATW) 
-# consider only destinations with at least 2000 flights from Appleton (ATW)
-# which destination had the lowest average arrival delay time
+-- count the number of flights from Appleton (ATW) for each year
+
+
+
+```
+
+
+```{sql}
+--| connection: con_air
+
+-- which carriers flew from Appleton (ATW) to Chicago (ORD)
+-- how many flights did they do per year
+
+
+
+```
+
+
+```{sql}
+--| connection: con_air
+
+-- for flights that flew from Appleton (ATW) to Chicago (ORD)
+-- what was the latest flight for each carrier
+
+
+
+```
+
+
+```{sql}
+--| connection: con_air
+
+-- for flights that flew from Appleton (ATW) 
+-- which destination had the lowest average arrival delay time
+
+
+
+```
+
+
+```{sql}
+--| connection: con_air
+
+-- for flights that flew from Appleton (ATW) 
+-- consider only destinations with at least 2000 flights from Appleton (ATW)
+-- which destination had the lowest average arrival delay time
 
 
 
@@ -306,6 +310,6 @@ DBI::dbDisconnect(con_air, shutdown = TRUE)
 ```
 
 
-# ------------------------------------------------------------------------------
+
 
 
