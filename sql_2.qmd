@@ -1,19 +1,29 @@
 ---
 title: "Writing SQL queries"
 execute: 
-  eval: false
+  eval: true
   warning: false
   message: false
-  cache: true
+  cache: false
 ---
+
+In our previous chapter, we established how to connect `R` to a remote relational database. However, simply connecting to a database is only the first step. Our primary goal is to extract, filter, and aggregate data to answer analytical questions. 
+
+Because we are operating within the `R` ecosystem but interacting with a `SQL` database, we have three distinct methods for sending instructions to the server:
+
+1.  Translating `R`'s `dplyr` syntax into `SQL` using the `dbplyr` package.
+2.  Passing raw `SQL` strings through `R` functions using the `DBI` package.
+3.  Writing native `SQL` directly within Quarto code chunks.
+
+In this chapter, we will explore all three methodologies, gradually transitioning from the familiar `tidyverse` syntax to writing robust, native `SQL`.
 
 
 ## load packages and connect to database server
 
-```{r}
-#| warning: false
-#| message: false
+We begin by loading our required packages and establishing our connection to the `airlines` database, just as we did previously. We will also create a reference pointer to the `flights` table, which contains millions of commercial flight records.
 
+
+```{r}
 library(tidyverse)
 library(mdsr)
 library(DBI)
@@ -52,6 +62,10 @@ DESCRIBE flights;
 
 ## SQL in R: Part 1 - the 'dbplyr' R package will directly translate 'dplyr' code into SQL
 
+For data scientists already comfortable with the `tidyverse`, the `dbplyr` package is an extraordinary tool. It acts as a translation engine, taking our standard `dplyr` verbs (`filter`, `arrange`, `select`, `mutate`, `summarize`, `group_by`) and silently converting them into the specific `SQL` dialect required by our database (in this case, `MariaDB/MySQL`).
+
+Suppose we want to find the minimum and maximum year recorded in our `flights` table. We can write standard `dplyr` code:
+
 ```{r}
 
 yrs <- flights |>
@@ -62,11 +76,25 @@ yrs
 
 ```
 
+The data is processed on the remote server, and only the summarized one-row result is returned to our console. But how did `R` communicate this to the database? We can peek under the hood using the `show_query()` function.
+
 ```{r}
 dplyr::show_query(yrs)  
 ```
 
+::: {.callout-tip title="The SQL Vocabulary"}
+Looking at the output of `show_query()`, we see several foundational `SQL` keywords:
 
+* `SELECT`: Determines which columns or calculations we want to retrieve.
+
+* `AS`: Creates an alias, similar to the = sign in a `mutate()` or `summarize()` function.
+
+* `FROM`: Specifies the table we are querying.
+
+Notice also that the query ends with a semicolon (;).
+:::
+
+Let us try a more complex example. We want to extract all flights from 2013 that traveled between Los Angeles (LAX) and Boston (BOS).
 
 ```{r}
 
@@ -79,9 +107,16 @@ la_bos
 
 ```
 
+When we inspect the `SQL` translation for this filter, we notice some critical syntactical differences between `R` and `SQL`.
+
 ```{r}
 dplyr::show_query(la_bos)
 ```
+
+In the `SQL` translation, our `R` `filter()` statement becomes a `SQL` `WHERE` clause. Furthermore, notice that `SQL` uses a single = for logical evaluation, whereas `R` requires ==. Finally, our symbolic operators `&` and `|` are translated into explicit `AND` and `OR` keywords.
+
+Once we are satisfied with our query and wish to bring the data into our local R environment for visualization or modeling, we append the `collect()` function.
+
 
 ```{r}
 
@@ -94,17 +129,10 @@ la_bos
 
 
 
-```{r}
-# terminate the SQL connection
-
-DBI::dbDisconnect(con_air, shutdown = TRUE)
-
-```
-
-
-
 
 ## SQL in R: Part 2 - using the DBI R package to write SQL queries in r code chunks
+
+While `dbplyr` is incredibly convenient, it cannot translate every possible `SQL` function, especially highly specialized window functions or dialect-specific commands. In these instances, we can bypass the translation layer and pass raw `SQL` strings directly to the database using `DBI::dbGetQuery()`.
 
 ```{r}
 
@@ -113,6 +141,9 @@ DBI::dbGetQuery(con_air,
 
 ```
 
+In `SQL`, the `*` symbol is a wildcard meaning "all columns." The `LIMIT` clause is the `SQL` equivalent of `R`'s `head()` function, restricting the output size.
+
+We can also perform complex aggregations directly within the string. Here, we count the number of flights per year and order the results.
 
 ```{r}
 
@@ -122,21 +153,17 @@ DBI::dbGetQuery(con_air,
 ```
 
 
-```{r}
-# terminate the SQL connection
-
-DBI::dbDisconnect(con_air, shutdown = TRUE)
-
-```
-
-
-
 
 ## SQL in R: Part 3 - writing SQL queries in sql code chunks
 
+Passing `SQL` strings inside `R` functions can become visually cumbersome for long, multi-line queries. Because Quarto is a polyglot environment, we can change the code chunk type from `{r}` to `{sql}`. This provides proper syntax highlighting and allows us to write native `SQL` exactly as we would in a dedicated database client.
+
+Let us recreate our previous dbplyr queries using native `SQL` chunks.
 
 ```{sql}
 --| connection: con_air
+
+-- display minimum and maximum year
 
 SELECT MIN(year) AS min_year, 
        MAX(year) AS max_year
@@ -147,6 +174,8 @@ FROM flights;
 
 ```{sql}
 --| connection: con_air
+
+-- extract flights between LAX and BOS in 2013
 
 SELECT *
 FROM flights
@@ -160,6 +189,8 @@ WHERE (year = 2013 AND
 ```{sql}
 --| connection: con_air
 
+-- select all columns and limit to top 2 rows
+
 SELECT * 
 FROM flights 
 LIMIT 2;
@@ -170,6 +201,10 @@ LIMIT 2;
 ```{sql}
 --| connection: con_air
 
+-- select year, and the computing num_flights from the flights table 
+-- grouping by year
+-- ordering by the num_flights
+
 SELECT year, 
        COUNT(*) AS num_flights 
 FROM flights 
@@ -179,7 +214,7 @@ ORDER BY num_flights;
 ```
 
 
-Queries in SQL start with the **SELECT** keyword and consist of several clauses, which have to be written in this order:
+Queries in `SQL` start with the **SELECT** keyword and consist of several clauses, which have to be written in this order:
 
 * **SELECT** allows you to list the columns, or functions operating on columns, that you want to retrieve. 
 
@@ -191,7 +226,7 @@ Queries in SQL start with the **SELECT** keyword and consist of several clauses,
 
 * **GROUP BY** allows you to aggregate the records according to some shared value. 
 
-* **HAVING** is like a WHERE clause that operates on the result set—not the original rows themselves. 
+* **HAVING** is like a `WHERE` clause that operates on the result set—not the original rows themselves. 
 
 * **ORDER BY** orders the rows of the result set. 
 
@@ -212,9 +247,26 @@ DESCRIBE flights;
 
 -- display the first ten rows of the flights table
 
-
+SELECT *
+FROM flights
+LIMIT 10;
 
 ```
+
+```{sql}
+--| connection: con_air
+
+-- skip the first 18,008,362 rows and return the next 10
+-- how did we find out the total number of rows?
+
+SELECT *
+FROM flights
+LIMIT 18008362, 10;
+
+```
+
+
+We can also concatenate strings and cast them into date formats natively:
 
 
 ```{sql}
@@ -222,6 +274,23 @@ DESCRIBE flights;
 
 -- display year, month, day, origin, dep_time, sched_dep_time, dep_delay for the first ten rows of the flights table
 
+SELECT STR_TO_DATE(CONCAT(year, '-', month, '-', day), '%Y-%m-%d') AS 'date', origin, dep_time, sched_dep_time, dep_delay
+FROM flights
+LIMIT 10;
+
+
+
+```
+
+Notice the difference between the `BETWEEN` and `IN` operators.
+
+```{sql}
+--| connection: con_air
+
+-- number of flights in the flights table
+
+SELECT COUNT(*) as num_rows
+FROM flights;
 
 
 ```
@@ -230,38 +299,140 @@ DESCRIBE flights;
 ```{sql}
 --| connection: con_air
 
--- count the total number of rows in the flights table
+-- number of flights that were delayed at departure by less than 10 minutes
 
-
+SELECT COUNT(*) as num_rows
+FROM flights
+WHERE dep_delay BETWEEN 0 AND 10;
 
 ```
-
 
 ```{sql}
 --| connection: con_air
 
--- extract all info about flights that flew from Appleton (ATW) to Chicago (ORD) in 2013
+-- number of flights that were delayed by either 0 or 10 minutes
+
+SELECT COUNT(*) as num_rows
+FROM flights
+WHERE dep_delay IN (0,10);
 
 
 
 ```
 
+
+::: {.callout-warning title="Operator Precedence Edge Case"}
+
+Logical operators in `SQL` evaluate in a strict order: `AND` is evaluated before `OR`.
+
+Imagine we are looking at our `flights` table and we want to find all flights in the year 2013 that either departed from Appleton (ATW) or arrived in Chicago (ORD).
+
+It is tempting to write the query exactly as we speak it:
+
+```{sql}
+--| connection: con_air
+
+SELECT *
+FROM flights
+WHERE year = 2013 AND origin = 'ATW' OR dest = 'ORD';
+
+```
+
+Because `AND` has higher precedence, the `SQL` engine secretly groups the query like this:
+
+```{sql}
+--| connection: con_air
+
+SELECT *
+FROM flights
+WHERE (year = 2013 AND origin = 'ATW') OR dest = 'ORD';
+
+```
+
+What this actually returns:
+
+1. Every flight that departed from ATW in 2013.
+
+2. PLUS every single flight that landed in ORD, regardless of the year, and regardless of where it came from.
+
+Instead of returning a small subset of specific 2013 flights, our query will return millions of rows, pulling in ORD flights from 2001, 2010, etc.
+
+To fix this, we use parentheses to force the database to evaluate the OR condition as a single, combined logical unit before it evaluates the AND condition.
+
+```{sql}
+--| connection: con_air
+
+SELECT *
+FROM flights
+WHERE year = 2013 AND (origin = 'ATW' OR dest = 'ORD');
+
+```
+
+How `SQL` evaluates this:
+
+1. First, it looks inside the parentheses: "Is the origin ATW, `OR` is the destination ORD?" (Returns True or False for each row).
+
+2. Then, it evaluates the `AND`: "Is the year 2013 `AND` did the previous step return True?"
+
+By wrapping the `OR` statements in brackets, we ensure that the `year = 2013` condition acts as a strict filter applied to both the origin and the destination checks.
+
+A Golden Rule for `SQL`:
+
+*Whenever you have a `WHERE` clause that mixes `AND` and `OR`, always use parentheses. Even if you memorize the precedence rules, parentheses make your code instantly readable to your colleagues and future self, eliminating any ambiguity about your analytical intentions.*
+
+:::
+
+<!-- ::: {.callout-warning title="Operator Precedence Edge Case"} -->
+<!-- Logical operators in `SQL` evaluate in a strict order: `AND` is evaluated before `OR`. Consider the following query meant to find flights out of Appleton (ATW) going to Chicago (ORD) in 2013: -->
+
+<!-- ```{sql} -->
+<!-- --| connection: con_air -->
+<!-- --| eval: false -->
+
+<!-- -- extract all info about flights that flew from Appleton (ATW) to Chicago (ORD) in 2013 -->
+
+<!-- SELECT * -->
+<!-- FROM flights -->
+<!-- WHERE year = 2013 AND origin = 'ATW' OR dest = 'ORD'; -->
+
+
+<!-- ``` -->
+
+<!-- Because `AND` binds tighter, `SQL` interprets this as: "Find flights from ATW in 2013, `OR` find any flight going to ORD from any year and any origin." This will return millions of incorrect rows. We must always use parentheses to explicitly define our logic, just as we did in our LAX-BOS query earlier. -->
+<!-- ::: -->
+
+
+
+
+Let us correctly aggregate data for flights out of Appleton.
 
 ```{sql}
 --| connection: con_air
 
 -- count the number of flights from Appleton (ATW) for each year
 
+SELECT year, COUNT(*) AS num_flights 
+FROM flights 
+WHERE origin = 'ATW'
+GROUP BY year;
+
 
 
 ```
 
+
+We can group by multiple variables by separating them with commas.
 
 ```{sql}
 --| connection: con_air
 
 -- which carriers flew from Appleton (ATW) to Chicago (ORD)
 -- how many flights did they do per year
+
+SELECT carrier, year, COUNT(*) AS num_flights
+FROM flights 
+WHERE origin = 'ATW' AND dest = 'ORD'
+GROUP BY carrier, year;
 
 
 
@@ -274,10 +445,21 @@ DESCRIBE flights;
 -- for flights that flew from Appleton (ATW) to Chicago (ORD)
 -- what was the latest flight for each carrier
 
+SELECT carrier, MAX(dep_time) AS latest_dep_time 
+FROM flights 
+WHERE origin = 'ATW' AND dest = 'ORD'
+GROUP BY carrier
+LIMIT 1;
+
 
 
 ```
 
+Understanding the difference between `WHERE` and `HAVING` is one of the most important hurdles in learning `SQL`. Both act as filters, but they operate at different stages of the execution pipeline.
+
+`WHERE` filters records in the original dataset before any grouping occurs. `HAVING` filters the results of our aggregations after the `GROUP BY` clause has executed.
+
+First, let us find the destination with the lowest average arrival delay from Appleton, using `WHERE` to filter the origin.
 
 ```{sql}
 --| connection: con_air
@@ -285,10 +467,18 @@ DESCRIBE flights;
 -- for flights that flew from Appleton (ATW) 
 -- which destination had the lowest average arrival delay time
 
+SELECT dest, COUNT(*) AS num_flights, AVG(arr_delay) AS avg_arr_delay
+FROM flights 
+WHERE origin = 'ATW'
+GROUP BY dest
+ORDER BY avg_arr_delay
+LIMIT 1;
+
 
 
 ```
 
+The result might show a destination with only one or two flights, heavily skewing the average. We want to restrict our analysis to robust routes—those with at least 2,000 flights. We cannot put `num_flights >= 2000` in the `WHERE` clause because `num_flights` does not exist in the original table; it is an aggregated calculation. Therefore, we must use `HAVING`.
 
 ```{sql}
 --| connection: con_air
@@ -297,10 +487,57 @@ DESCRIBE flights;
 -- consider only destinations with at least 2000 flights from Appleton (ATW)
 -- which destination had the lowest average arrival delay time
 
+SELECT dest, COUNT(*) AS num_flights, AVG(arr_delay) AS avg_arr_delay
+FROM flights 
+WHERE origin = 'ATW'
+GROUP BY dest
+HAVING num_flights >= 2000
+ORDER BY avg_arr_delay
+LIMIT 1;
+
 
 
 ```
 
+## calling `SQL` generated datasets into R for data viz
+
+Our ultimate workflow often involves doing the heavy lifting (filtering and aggregating) in `SQL`, and then pulling the summarized dataset into `R` to leverage packages like `ggplot2`. We have three ways to save the output of a `SQL` query into an `R` object:
+
+### Method 1: using `DBI::dbGetQuery()`
+
+```{r}
+df1 <- DBI::dbGetQuery(con_air, "SELECT * FROM flights LIMIT 10")
+
+# always check the number of rows
+
+```
+
+### Method 2: using `dbplyr` with raw `SQL`
+
+```{r}
+
+df2 <- dplyr::tbl(con_air, dplyr::sql("SELECT * FROM flights LIMIT 10")) |> dplyr::collect()
+
+# doesn't need a semicolon
+
+```
+
+### Method 3: Quarto chunk options
+
+We can write a native `SQL` chunk and use the `--| output.var: "df"` code chunk option to assign the result to an object in our `R` environment.
+
+```{sql}
+--| connection: con_air
+--| output.var: "df3"
+
+
+SELECT * FROM flights LIMIT 10;
+
+```
+
+All three methods are valid. We select the one that best fits our workflow and the complexity of the query we need to execute.
+
+Finally, always remember to disconnect your connection to the server.
 
 ```{r}
 # terminate the SQL connection

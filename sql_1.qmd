@@ -1,36 +1,19 @@
 ---
 title: "Accessing Databases and Database Tables"
 execute: 
-  eval: false
+  eval: true
   warning: false
   message: false
-  cache: true
+  cache: false
 ---
-
-
-
-## resources
-
-* [R for Data Science (2e) - Chapter 21](https://r4ds.hadley.nz/)
-
-* [Modern Data Science with R (3e) - Chapters 15 and 16](https://mdsr-book.github.io/mdsr3e/)
-
-* [Notes from Database Systems at UC Berkeley](https://cs186berkeley.net/notes/)
-
-* [Introduction to dbplyr](https://cran.r-project.org/web/packages/dbplyr/vignettes/dbplyr.html)
-
-* [Hands-on Database (2e) - Steve Conger](https://github.com/toantd14/Catalogue-IT-Books/blob/master/Hands-on%20Database%202nd%20-%20Steve%20Conger.pdf)
-
-* CMSC 225 - Database Techniques and Modeling (F'26 and S'27)
 
 
 
 ## load packages
 
-```{r}
-#| warning: false
-#| message: false
+To interact with a database using `R`, we need a specific set of tools. The `tidyverse` collection of `R` packages provides our standard data manipulation framework, while `DBI` (Database Interface) serves as the common architecture for communicating with **Relational DataBase Management Systems (RDBMS)**. Because different databases (`PostgreSQL`, `MySQL`, `SQLite`) speak slightly different dialects of `SQL`, we also need a specific driver. In this case, we use `RMariaDB` to communicate with `MySQL/MariaDB` servers. Finally, `dbplyr` is the critical translation layer that allows us to write `dplyr` code that `R` automatically converts into `SQL`.
 
+```{r}
 library(tidyverse)
 library(mdsr)
 library(DBI)
@@ -42,15 +25,33 @@ library(dbplyr)
 
 ## databases and accessing them
 
+Relational databases operate on a **client-server** model. In this architecture, the data does not live on our local machine. Instead, it is housed on a centralized remote server. Our `R` session (the client) must send a formal request over a network to access that data.
+
+We initialize this connection using the `mdsr` package, which provides a convenient wrapper function to connect to a public, read-only educational database.
+
+Here, `con_air` is the connection to the `airlines` database on the `scidb` server located on Amazon Web Services. Check out more details on the help page (`?mdsr::dbConnect_scidb`).
+
 ```{r}
 # access airlines database
 
 con_air <- mdsr::dbConnect_scidb("airlines")
 
+# remember the name of the connection
+
 ```
 
+::: {.callout-tip title="The Client-Server Analogy"}
+Think of the client-server model like a restaurant. 
+We (the client) sit at a table and look at the menu. We do not go into the kitchen to cook the food ourself. Instead, we send our order (the query) via a waiter (the connection) to the kitchen (the server). The kitchen processes the heavy lifting and sends back only our specific meal (the results).
+:::
+
+
+While wrapper functions like the one above are convenient for teaching, they hide the underlying mechanics. In an industry setting, connecting to a database requires explicit routing and authentication parameters. We must specify the exact server location, the name of the database, our username, and our password.
+
+Here is what an explicit connection via `DBI` looks like:
 
 ```{r}
+#| eval: false
 # access wai database
 
 con_wai <- DBI::dbConnect(
@@ -66,6 +67,10 @@ con_wai <- DBI::dbConnect(
 
 ## database tables and accessing them
 
+Once a connection is established, the first step is typically reconnaissance: we need to know what tables exist within the database.
+
+We can achieve this using `R` syntax via the `DBI` package:
+
 ```{r}
 # lists tables in the database
 
@@ -73,13 +78,27 @@ DBI::dbListTables(con_air)
 
 ```
 
+Alternatively, because Quarto is a polyglot authoring framework, we can write raw `SQL` directly. By specifying `connection = "con_air"` or using `#| connection: con_air` in the chunk options, Quarto knows to pass the code inside the chunk directly to the database rather than to the `R` interpreter.
 
-```{sql connection="con_air"}
---- lists tables in the database
+Note, the following is a `SQL` code chunk.
+
+```{sql}
+--| connection: con_air
+
+-- lists tables in the database
 
 SHOW TABLES;
 
 ```
+
+::: {.callout-note title="SQL Syntax Conventions"}
+Notice that we wrote SHOW TABLES in all capital letters and ended the statement with a semicolon (;). While `SQL` is technically case-insensitive, capitalizing `SQL` keywords is a universal standard that drastically improves readability, distinguishing commands from table and column names. The semicolon acts as a terminator, signaling to the server that the query is complete and ready for execution.
+:::
+
+
+Knowing the tables exist is not enough; we must establish a reference to a specific table to query it. We do this using `dplyr::tbl()`.
+
+Here, we query the `flights` table from the established connection to the `airlines` database.
 
 
 ```{r}
@@ -89,6 +108,26 @@ flights <- dplyr::tbl(con_air, "flights")
 
 ```
 
+```{r}
+# inspect the object type
+
+class(flights)
+
+```
+
+Notice the output of `class(flights)`. It is not a standard `data.frame` or `tbl_df`. It is a `tbl_dbi` and `tbl_sql`. This distinction is profound because it introduces the concept of lazy evaluation. 
+
+
+```{r}
+# attempting to print the flights object
+
+flights
+
+```
+
+When we print the `flights` object, it provides a quick glimpse of the columns and the first few rows. However, we will notice it says `??` for the total number of rows. This is because the data is not actually in R's memory. `R` has merely established a pointer to the table on the server. Because counting tens of millions of rows takes computational time, the database engine skips that step until explicitly commanded otherwise. It is **"lazy"**—it does as little work as possible.
+
+To understand the architecture of the table without pulling data, we can use the `DESCRIBE` command in `SQL`.
 
 ```{sql}
 --| connection: con_air
@@ -97,6 +136,12 @@ DESCRIBE flights;
 
 ```
 
+This output is conceptually similar to R's `glimpse()` function, but it exposes the underlying database types (e.g., `varchar`, `int`, `datetime`). Databases require strict typing to optimize physical storage on disk. A column defined as `varchar(3)` can only ever hold text strings up to three characters long, preventing data corruption and saving immense amounts of storage space.
+
+Remember, earlier we were trying to figure out if it would be more efficient to store student names versus their IDs!
+
+
+To fully appreciate the power of lazy evaluation, we can compare the memory footprint of a database pointer versus a materialized object in R. Let us create a reference to the `carriers` table.
 
 ```{r}
 # access carriers table from the airlines database
@@ -114,6 +159,8 @@ DESCRIBE carriers;
 ```
 
 
+Let's check how much RAM this connection occupies in our local environment:
+
 ```{r}
 # carriers lives in the SQL database and is linked remotely
 
@@ -121,30 +168,39 @@ carriers |>
   utils::object.size() |>   
   print(units = "Kb")
 
-# nycflights13::flights |> 
-#   object.size() |>
-#   print(units = "Mb")
+
+```
+
+The object size is remarkably small (often just a few kilobytes). It only stores the connection string and metadata, not the data itself.
+
+However, in a typical data science workflow, we eventually need the data in our local environment—usually after we have aggregated or filtered it—so we can pass it to local functions like `ggplot2` for visualization. To bridge the gap between the remote database and our local `R` session, we use the `collect()` function.
+
+```{r}
+
+carriers_df <- carriers |>  dplyr::collect()   
 
 ```
 
 
+Let's check the memory size now:
+
 ```{r}
 # carriers lives in R
 
-carriers |>
-  dplyr::collect() |>
+carriers_df |>
   utils::object.size() |>
   print(units = "Kb")
 
 ```
 
+The materialized data frame is significantly larger because the actual data now resides in our computer's RAM.
 
-```{r}
+::: {.callout-warning title="The Danger of Collect"}
+We should never run `collect()` on a massive, unaggregated table like `flights`. That table contains hundreds of millions of rows. If we attempt to `collect()` the entire table, we will exhaust our machine's RAM, and our `R` session will crash. The proper workflow is to use `dbplyr` or `SQL` to filter and summarize the data on the remote server, and only `collect()` the finalized, summarized results into R.
+:::
 
-carries_df <- carriers |>  dplyr::collect()   
 
-```
-
+Just as we would close a file after editing it, we must explicitly sever our connection to a remote database when our analysis is complete. Open connections consume resources on both our local machine and the remote server.
 
 ```{r}
 # terminate the SQL connection
@@ -154,7 +210,7 @@ DBI::dbDisconnect(con_air, shutdown = TRUE)
 ```
 
 
-
+Terminating connections is an essential habit for responsible computing, particularly when sharing server resources in an industry or academic environment.
 
 
 
