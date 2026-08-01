@@ -1,0 +1,112 @@
+---
+title: "SQL"
+execute: 
+  eval: false
+---
+
+## Introduction: Beyond the Flat File
+
+In most introductory statistical and data science coursework (such as CMSC/STAT 205: Data-Scientific Programming), we typically work with *static* data, that is, a (or, a few) `.csv` or `.xlsx` file(s), which we can load entirely into our computer's active memory (RAM) - this is similar to loading dataset(s) into the `Environment` pane in the top right of our Posit Cloud screen. 
+
+While this setup is highly effective for isolated research questions and pedagogical exercises inside the classroom, data in the real-world, or simply, datasets, are rarely static, and they are almost always larger than what can fit into a single machine's memory. This is common in most industry environments and complex organizational structures.
+
+This is where **Database Management Systems (DBMS)** become necessary. A DBMS is a software system designed to store data in a structured format, and which can also be used to retrieve, and manage data efficiently and securely. Moving from flat (static) files to a robust database framework solves three fundamental infrastructural problems:
+
+1. **Scale:** Databases are optimized to query gigabytes or terabytes of data dynamically without requiring the entire dataset to be loaded into our local environment.
+2. **Concurrency:** A flat file cannot easily be read and written to by hundreds of users simultaneously without data corruption. Databases handle concurrent actions safely, that is, allow for multiple users to access the data simultaneously, maintaining a single source of truth.
+3. **Integrity:** Databases enforce strict rules about what data can enter the system (schemas), ensuring that a numeric column cannot accidentally ingest a string of text.
+
+In a database, data are stored in the form of tables. Conceptually, a table in a database is no different from the data frames which are used in `R`. They have the same rectangular format with horizontal rows and vertical columns. However, there are two major differences between a data frame that we are used to (from 205) and a table in a database.
+
+1. **Size**: Tables in a database are too large to be stored in our computer's memory unlike typical data frames we used previously. Thus, we need to store tables remotely on a hard drive outside of our personal computers. This, in turn, make the data secure and can be accessed by multiple users at a time.
+
+2. **Relationality**: Tables in a database are usually linked with a **key**.
+
+## The Relational Revolution
+
+Prior to the 1970s, data storage was highly rigid. Systems used hierarchical or network models, meaning that to extract data, a programmer had to write complex procedural code detailing the exact physical navigation path through the computer's storage layer. If the physical storage hardware changed, the software broke.
+
+In 1970, Edgar F. Codd, an IBM computer scientist, published a landmark paper: [*A Relational Model of Data for Large Shared Data Banks*](https://www.engineering.upenn.edu/~zives/03f/cis550/codd.pdf). Codd proposed separating the physical storage of data from its logical organization. Data would be organized into relations (tables) consisting of tuples (rows) and attributes (columns). Connections between data were established through shared keys rather than physical pointers.
+
+To interact with this new relational model, IBM developed `SEQUEL` (Structured English Query Language) in the mid-1970s, which was later shortened to `SQL` (Structured Query Language). `SQL` became an ANSI standard in 1986 and fundamentally changed how humans interact with data systems.
+
+
+To digest the concept of relational databases, let's think of this setup. Suppose Lawrence has been storing the records of each student from every graduating class. So, unsurprisingly, that's a **lot** of data. Now, think about how do we want to store these data - say we store students names, their IDs, date of births, classes taken every term, etc. Do we want to store all these data into a single file? Definitely not, for a variety of reasons. Firstly, we would want to separate certain pieces of information. Data about names, date of births, IDs, for example, are unlikely to change. We would like to keep them in one table. Data about courses can be kept in a separate table. These two tables would be related by a key. Now, do we want the key to be student names or their IDs? Which one is more efficient to store in terms of individual entries? Secondly, storing data in the above way lets us update only one table (containing information about courses) every term without touching the other table (student demographics which are unlikely to change). That is more efficient and secure to manage as well. Thirdly, what happens if a student does change their name? Then we can update only one entry in one table, rather than updating multiple entries (if demographic data and course-specific data were stored in a combined table).    
+
+
+
+## `SQL` as a Declarative Language
+
+Most general-purpose programming languages we encounter are *imperative*. We write sequential instructions telling the computer exactly *how* to achieve a result.
+
+`SQL` is fundamentally different; it is a *declarative* language. When we write `SQL`, we describe *what* result we want, and the database engine's query optimizer decides the most efficient algorithmic path to retrieve it. We do not write loops or dictate the order of operations. We state our logical requirements, and the engine handles the execution plan.
+
+This abstraction makes `SQL` incredibly powerful. A query written to extract ten rows from a table of a thousand records uses the exact same syntax as a query operating on a table of ten billion records distributed across a cloud cluster.
+
+`SQL` is a query language meant for working with relational databases. There exists many dialects of `SQL` (just like a regular spoken language). Translating between the dialects is not always easy although once we learn how to program in one dialect, we will be able to (hopefully) pick up any of the other `SQL` dialects. We will use the `MySQL` dialect in the upcoming chapters, unless mentioned otherwise. `MySQL` is among the most popular implementations of `SQL` and it is open source. `MySQL` is based on a **client-server model**, meaning, the data live on a powerful computer (the server) and we connect to the data from our own computer (the client). 
+
+## `SQL` vs. `R`
+
+`R` is a statistical computing environment that is developed for the purpose of data analysis. `SQL` is designed as a robust solution for data management and extraction, its analytic capabilities are very limited. Although, we will notice that there are similarities in the ways we think about and write `R` and `SQL` codes, they serve fundamentally different purposes. In the next chapters, we will alternate between `SQL` and `R` code, and use them for their specific tasks (for example, we will extract data from a database using `SQL` and visualize them using `R`). It's important for a data scientist to have both languages in their toolkit.
+
+
+
+
+## Industry Ubiquity
+
+Despite being decades old, `SQL` is the undisputed *lingua franca* of modern data work. While specialized frameworks rise and fall, `SQL` remains the underlying connective tissue for data engineering, analytics, and applied statistics.
+
+In contemporary industry contexts, `SQL` is used to:
+
+* Extract subsets of data from enterprise data warehouses (like Snowflake, Amazon Redshift, or Google BigQuery) before bringing the manageable subset into an analytical environment for modeling.
+* Define metrics and dashboards in business intelligence tools.
+* Perform robust, in-database feature engineering prior to training predictive models.
+
+Mastering `SQL` is not just about learning a syntax; it is about learning how to think in sets and relations. It bridges the gap between ad-hoc statistical analysis and production-grade data infrastructure.
+
+## Cautionary Note
+
+In the next four chapters, we will use both `R` and `SQL` code chunks. Shown below are an example of each; notice (1) the header which defines the language (although this would be invisible later on), and (2) the difference in how to comment out code, that should be your cue to identify the specific code chunk.
+
+::: {.callout-tip title="R Code Chunk"}
+
+```{{r}}
+
+# your R code
+
+```
+
+:::
+
+::: {.callout-tip title="SQL Code Chunk"}
+
+```{{sql}}
+--| connection: connection_to_your_server
+
+-- your SQL code
+
+```
+
+:::
+
+
+## Further Resources
+
+Besides the resources mentioned at the beginning of the text, I suggest you check out
+
+* [Data Science, the SQL](https://st47s.com/SDS261/Notes/) notes by Jo Hardin.
+* [Notes from Database Systems at UC Berkeley](https://cs186berkeley.net/notes/)
+* [Introduction to dbplyr](https://cran.r-project.org/web/packages/dbplyr/vignettes/dbplyr.html)
+* [Hands-on Database (2e) - Steve Conger](https://github.com/toantd14/Catalogue-IT-Books/blob/master/Hands-on%20Database%202nd%20-%20Steve%20Conger.pdf)
+* [SQL in a Nutshell]() by Kline et al.
+* Documentations for different `SQL` dialects - [MySQL](https://dev.mysql.com/doc/refman/9.7/en/), [PostgreSQL](https://www.postgresql.org/docs/9.4/index.html), and [SQLite](https://www.sqlite.org/docs.html)
+
+
+
+<!-- ### Essential Resources -->
+
+<!-- As we progress through the material, you may want to consult the official documentation of the tools we will be using. They are robust, freely available, and standard in the industry: -->
+
+<!-- * **PostgreSQL:** An advanced, open-source object-relational database system known for its rigorous adherence to SQL standards. -->
+<!-- * **DuckDB:** A fast, in-process analytical database that integrates seamlessly with modern data science workflows. It is excellent for processing large datasets locally before piping them into plotting or modeling functions. -->
+<!-- * **SQLite:** A lightweight, serverless database engine perfect for learning database concepts without complex configuration. -->
