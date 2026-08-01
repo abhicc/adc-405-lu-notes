@@ -4,7 +4,8 @@ project:
 book:
   title: "Advanced Data Computing (405 @ LU) Notes"
   author: "Abhishek Chakraborty"
-  date: "7/24/2026"
+  date: today
+  date-format: long
   reader-mode: true
   
   page-footer:
@@ -16,7 +17,7 @@ book:
   chapters:
     - index.qmd
     
-    - part: SQL
+    - part: SQL.qmd
       chapters: 
         - sql_1.qmd
         - sql_2.qmd

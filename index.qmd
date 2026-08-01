@@ -1,3 +1,14 @@
 # Welcome {.unnumbered}
 
+These notes have been developed for the CMSC/STAT 405: Advanced Data Computing course at [Lawrence University](https://www.lawrence.edu/), Appleton, Wisconsin. This course is intended for upper-level undergraduate students who have previously taken a course on R-programming (that covers the `tidyverse` ecosystem, webscraping, and Shiny apps).
+
+We use R, and access it through Posit Cloud, as our primary computing environment, except for writing SQL code. These notes have been heavily adopted and adapted from the following excellent open-source resources: 
+
+* [R for Data Science (2e)](https://r4ds.hadley.nz/) by Hadley Wickham, Mine Çetinkaya-Rundel, and Garrett Grolemund.
+* [Advanced R](https://adv-r.hadley.nz/index.html) by Hadley Wickham .
+* [Modern Data Science with R (3e)](https://mdsr-book.github.io/mdsr3e/) by Benjamin Baumer, Daniel Kaplan, and Nicholas Horton.
+* [Text Mining with R](https://www.tidytextmining.com/) by Julia Silge and David Robinson.
+* [R Packages (2e)](https://r-pkgs.org/) by Hadley Wickham and Jennifer Bryan.
+
+Besides these wonderful texts, some additional resources are mentioned at the beginning of each module and/or chapter. Some of the prose have been written in collaboration with AI. Reader comments and feedback are greatly appreciated. To report errors or bugs, please post an issue or raise a pull request [here](https://github.com/abhicc/adc-405-lu-notes).
 
