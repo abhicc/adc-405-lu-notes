@@ -106,6 +106,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -326,23 +355,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>We initialize this connection using the <code>mdsr</code> package, which provides a convenient wrapper function to connect to a public, read-only educational database.</p>
 <p>Here, <code>con_air</code> is the connection to the <code>airlines</code> database on the <code>scidb</code> server located on Amazon Web Services. Check out more details on the help page (<code>?mdsr::dbConnect_scidb</code>).</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># access airlines database</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># connecting to the airlines database</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>con_air <span class="ot">&lt;-</span> mdsr<span class="sc">::</span><span class="fu">dbConnect_scidb</span>(<span class="st">"airlines"</span>)</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># remember the name of the connection</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div class="callout callout-style-default callout-tip callout-titled" title="The Client-Server Analogy">
+<div class="callout callout-style-default callout-note callout-titled" title="The Client-Server Analogy">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>The Client-Server Analogy
+<span class="screen-reader-only">Note</span>The Client-Server Analogy
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Think of the client-server model like a restaurant. We (the client) sit at a table and look at the menu. We do not go into the kitchen to cook the food ourself. Instead, we send our order (the query) via a waiter (the connection) to the kitchen (the server). The kitchen processes the heavy lifting and sends back only our specific meal (the results).</p>
+<p>Think of the <strong>client-server</strong> model like a restaurant. We (the client) sit at a table and look at the menu. We do not go into the kitchen to cook the food ourself. Instead, we send our order (the query) via a waiter (the connection) to the kitchen (the server). The kitchen processes the heavy lifting and sends back only our specific meal (the results).</p>
 </div>
 </div>
 <p>While wrapper functions like the one above are convenient for teaching, they hide the underlying mechanics. In an industry setting, connecting to a database requires explicit routing and authentication parameters. We must specify the exact server location, the name of the database, our username, and our password.</p>
@@ -357,13 +386,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">user =</span> <span class="st">"waiuser"</span>,</span>
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">password =</span> <span class="st">"smith_waiDB"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+<div class="callout callout-style-default callout-warning callout-titled" title="Password Security">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Password Security
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>It is not ideal and hence, not recommended, to share passwords. The code chunk above is shown only for teaching purposes.</p>
+</div>
+</div>
 </section>
 <section id="database-tables-and-accessing-them" class="level2" data-number="1.3">
 <h2 data-number="1.3" class="anchored" data-anchor-id="database-tables-and-accessing-them"><span class="header-section-number">1.3</span> database tables and accessing them</h2>
 <p>Once a connection is established, the first step is typically reconnaissance: we need to know what tables exist within the database.</p>
 <p>We can achieve this using <code>R</code> syntax via the <code>DBI</code> package:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># lists tables in the database</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># lists tables in the airlines database</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbListTables</span>(con_air)   </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
@@ -418,13 +460,28 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Notice that we wrote SHOW TABLES in all capital letters and ended the statement with a semicolon (;). While <code>SQL</code> is technically case-insensitive, capitalizing <code>SQL</code> keywords is a universal standard that drastically improves readability, distinguishing commands from table and column names. The semicolon acts as a terminator, signaling to the server that the query is complete and ready for execution.</p>
 </div>
 </div>
-<p>Knowing the tables exist is not enough; we must establish a reference to a specific table to query it. We do this using <code>dplyr::tbl()</code>.</p>
+<p>Knowing the tables exist is not enough; we must establish a reference to a specific table to query it. We do this using <code>dplyr::tbl()</code>. This creates a lazy reference to a remote database table without downloading it. Operations on this object are translated to <code>SQL</code> and executed on the server only when results are actually needed.</p>
 <p>Here, we query the <code>flights</code> table from the established connection to the <code>airlines</code> database.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># access flights table from the airlines database</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># reference to flights table from the airlines database</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>flights <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">tbl</span>(con_air, <span class="st">"flights"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+<div class="callout callout-style-default callout-note callout-titled" title="Object Distinctions">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Object Distinctions
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>It’s easy to conflate the objects we have created thus far. Notice the distinction between <code>con_air</code> (the connection object), <code>airlines</code> (the database), and <code>flights</code> (the table reference). The following hierarchy would be helpful</p>
+<p><span class="math display">\[\text{server} \rightarrow \text{database} \rightarrow \text{table} \rightarrow \text{table reference}\]</span></p>
+</div>
+</div>
+<p>Notice the output of <code>class(flights)</code>. It is not a standard <code>data.frame</code> or <code>tbl_df</code>. It is a <code>tbl_dbi</code> and <code>tbl_sql</code>. This distinction is profound because it introduces the concept of lazy evaluation.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># inspect the object type</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -434,7 +491,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 [4] "tbl_lazy"              "tbl"                  </code></pre>
 </div>
 </div>
-<p>Notice the output of <code>class(flights)</code>. It is not a standard <code>data.frame</code> or <code>tbl_df</code>. It is a <code>tbl_dbi</code> and <code>tbl_sql</code>. This distinction is profound because it introduces the concept of lazy evaluation.</p>
+<p>When we print the <code>flights</code> object below, it provides a quick glimpse of the columns and the first few rows. However, we will notice it says <code>??</code> for the total number of rows. This is because the data is not actually in R’s memory. <code>R</code> has merely established a pointer to the table on the server. Because counting tens of millions of rows takes computational time, the database engine skips that step until explicitly commanded otherwise. It is <strong>“lazy”</strong>—it does as little work as possible.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># attempting to print the flights object</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -460,10 +517,83 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 #   cancelled &lt;int&gt;, diverted &lt;int&gt;, hour &lt;int&gt;, minute &lt;int&gt;, time_hour &lt;dttm&gt;</code></pre>
 </div>
 </div>
-<p>When we print the <code>flights</code> object, it provides a quick glimpse of the columns and the first few rows. However, we will notice it says <code>??</code> for the total number of rows. This is because the data is not actually in R’s memory. <code>R</code> has merely established a pointer to the table on the server. Because counting tens of millions of rows takes computational time, the database engine skips that step until explicitly commanded otherwise. It is <strong>“lazy”</strong>—it does as little work as possible.</p>
-<p>To understand the architecture of the table without pulling data, we can use the <code>DESCRIBE</code> command in <code>SQL</code>.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Lazy tbl">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Lazy tbl
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Notice that typical exploratory functions such as <code>str</code> and <code>glimpse</code> would work differently with the <code>flights</code> object compared to datasets loaded in the local session memory.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>DESCRIBE flights;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(flights)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>List of 3
+ $ con       :Formal class 'MariaDBConnection' [package "RMariaDB"] with 7 slots
+  .. ..@ ptr                   :&lt;pointer: 0x6048a8efa300&gt; 
+  .. ..@ host                  : chr "mdsr.crcbo51tmesf.us-east-2.rds.amazonaws.com"
+  .. ..@ db                    : chr "airlines"
+  .. ..@ load_data_local_infile: logi FALSE
+  .. ..@ bigint                : chr "integer64"
+  .. ..@ timezone              : chr "UTC"
+  .. ..@ timezone_out          : chr "UTC"
+ $ src       :List of 2
+  ..$ con  :Formal class 'MariaDBConnection' [package "RMariaDB"] with 7 slots
+  .. .. ..@ ptr                   :&lt;pointer: 0x6048a8efa300&gt; 
+  .. .. ..@ host                  : chr "mdsr.crcbo51tmesf.us-east-2.rds.amazonaws.com"
+  .. .. ..@ db                    : chr "airlines"
+  .. .. ..@ load_data_local_infile: logi FALSE
+  .. .. ..@ bigint                : chr "integer64"
+  .. .. ..@ timezone              : chr "UTC"
+  .. .. ..@ timezone_out          : chr "UTC"
+  ..$ disco: NULL
+  ..- attr(*, "class")= chr [1:4] "src_MariaDBConnection" "src_dbi" "src_sql" "src"
+ $ lazy_query:List of 5
+  ..$ x         : 'dbplyr_table_path' chr "`flights`"
+  ..$ vars      : chr [1:21] "year" "month" "day" "dep_time" ...
+  ..$ group_vars: chr(0) 
+  ..$ order_vars: NULL
+  ..$ frame     : NULL
+  ..- attr(*, "class")= chr [1:3] "lazy_base_remote_query" "lazy_base_query" "lazy_query"
+ - attr(*, "class")= chr [1:5] "tbl_MariaDBConnection" "tbl_dbi" "tbl_sql" "tbl_lazy" ...</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(flights)  <span class="co"># notice the ?? on the number of rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: ??
+Columns: 21
+$ year           &lt;int&gt; 2013, 2013, 2013, 2013, 2013, 2013, 2013, 2013, 2013, 2…
+$ month          &lt;int&gt; 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,…
+$ day            &lt;int&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1…
+$ dep_time       &lt;int&gt; 2, 4, 11, 14, 16, 22, 29, 29, 31, 32, 33, 34, 38, 39, 4…
+$ sched_dep_time &lt;int&gt; 10, 2359, 15, 2355, 17, 20, 35, 35, 30, 33, 35, 2328, 4…
+$ dep_delay      &lt;int&gt; -8, 5, -4, 19, -1, 2, -6, -6, 1, -1, -2, 66, -2, -1, -5…
+$ arr_time       &lt;int&gt; 453, 730, 528, 544, 515, 552, 808, 449, 519, 557, 445, …
+$ sched_arr_time &lt;int&gt; 505, 729, 530, 540, 525, 554, 816, 458, 538, 606, 457, …
+$ arr_delay      &lt;int&gt; -12, 1, -2, 4, -10, -2, -8, -9, -19, -9, -12, 59, -7, -…
+$ carrier        &lt;chr&gt; "AA", "FL", "AA", "AA", "UA", "UA", "US", "AS", "DL", "…
+$ tailnum        &lt;chr&gt; "N201AA", "N344AT", "N3KMAA", "N3ENAA", "N38473", "N458…
+$ flight         &lt;int&gt; 2400, 710, 1052, 2392, 1614, 291, 436, 108, 1896, 687, …
+$ origin         &lt;chr&gt; "LAX", "SFO", "SFO", "SEA", "LAX", "SFO", "LAX", "ANC",…
+$ dest           &lt;chr&gt; "DFW", "ATL", "DFW", "ORD", "IAH", "IAH", "CLT", "SEA",…
+$ air_time       &lt;int&gt; 149, 247, 182, 191, 157, 188, 256, 181, 147, 183, 177, …
+$ distance       &lt;int&gt; 1235, 2139, 1464, 1721, 1379, 1635, 2125, 1448, 1399, 1…
+$ cancelled      &lt;int&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0…
+$ diverted       &lt;int&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0…
+$ hour           &lt;int&gt; 0, 23, 0, 23, 0, 0, 0, 0, 0, 0, 0, 23, 0, 0, 0, 0, 1, 0…
+$ minute         &lt;int&gt; 10, 59, 15, 55, 17, 20, 35, 35, 30, 33, 35, 28, 40, 40,…
+$ time_hour      &lt;dttm&gt; 2013-10-01 00:10:00, 2013-10-01 23:59:00, 2013-10-01 0…</code></pre>
+</div>
+</div>
+</div>
+</div>
+<p>To understand the architecture of the table without pulling data, we can use the <code>DESCRIBE</code> command in <code>SQL</code>. This returns column/field names, data types, and constraints for a table. This is a recommended first step before working with the table.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>DESCRIBE flights;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>Displaying records 1 - 10</caption>
@@ -564,14 +694,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>This output is conceptually similar to R’s <code>glimpse()</code> function, but it exposes the underlying database types (e.g., <code>varchar</code>, <code>int</code>, <code>datetime</code>). Databases require strict typing to optimize physical storage on disk. A column defined as <code>varchar(3)</code> can only ever hold text strings up to three characters long, preventing data corruption and saving immense amounts of storage space.</p>
 <p>Remember, earlier we were trying to figure out if it would be more efficient to store student names versus their IDs!</p>
-<p>To fully appreciate the power of lazy evaluation, we can compare the memory footprint of a database pointer versus a materialized object in R. Let us create a reference to the <code>carriers</code> table.</p>
+<p>To fully appreciate the power of lazy evaluation, we can compare the memory footprint of a database pointer versus a materialized in-memory object in <code>R</code>. Let us create a reference to the <code>carriers</code> table.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># access carriers table from the airlines database</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>carriers <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">tbl</span>(con_air, <span class="st">"carriers"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># reference to carriers table from the airlines database</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>carriers <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">tbl</span>(con_air, <span class="st">"carriers"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>DESCRIBE carriers;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>DESCRIBE carriers;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>2 records</caption>
@@ -608,11 +738,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>Let’s check how much RAM this connection occupies in our local environment:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># carriers lives in the SQL database and is linked remotely</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>carriers <span class="sc">|&gt;</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  utils<span class="sc">::</span><span class="fu">object.size</span>() <span class="sc">|&gt;</span>   </span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="at">units =</span> <span class="st">"Kb"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># carriers lives in the SQL database and is linked remotely</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>carriers <span class="sc">|&gt;</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  utils<span class="sc">::</span><span class="fu">object.size</span>() <span class="sc">|&gt;</span>   </span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="at">units =</span> <span class="st">"Kb"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>7.4 Kb</code></pre>
 </div>
@@ -620,15 +750,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>The object size is remarkably small (often just a few kilobytes). It only stores the connection string and metadata, not the data itself.</p>
 <p>However, in a typical data science workflow, we eventually need the data in our local environment—usually after we have aggregated or filtered it—so we can pass it to local functions like <code>ggplot2</code> for visualization. To bridge the gap between the remote database and our local <code>R</code> session, we use the <code>collect()</code> function.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>carriers_df <span class="ot">&lt;-</span> carriers <span class="sc">|&gt;</span>  dplyr<span class="sc">::</span><span class="fu">collect</span>()   </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>carriers_df <span class="ot">&lt;-</span> carriers <span class="sc">|&gt;</span>  dplyr<span class="sc">::</span><span class="fu">collect</span>()   </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Let’s check the memory size now:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># carriers lives in R</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>carriers_df <span class="sc">|&gt;</span></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  utils<span class="sc">::</span><span class="fu">object.size</span>() <span class="sc">|&gt;</span></span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="at">units =</span> <span class="st">"Kb"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># carriers lives in memory in R as carriers_df</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>carriers_df <span class="sc">|&gt;</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  utils<span class="sc">::</span><span class="fu">object.size</span>() <span class="sc">|&gt;</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="at">units =</span> <span class="st">"Kb"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>234.8 Kb</code></pre>
 </div>
@@ -645,13 +775,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div class="callout-body-container callout-body">
 <p>We should never run <code>collect()</code> on a massive, unaggregated table like <code>flights</code>. That table contains hundreds of millions of rows. If we attempt to <code>collect()</code> the entire table, we will exhaust our machine’s RAM, and our <code>R</code> session will crash. The proper workflow is to use <code>dbplyr</code> or <code>SQL</code> to filter and summarize the data on the remote server, and only <code>collect()</code> the finalized, summarized results into R.</p>
+<p>Another safer alternative (if needed) is</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># flights_df lives in memory in R</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>flights_df <span class="ot">&lt;-</span> flights <span class="sc">|&gt;</span> </span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">5</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">collect</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
 </div>
 </div>
 <p>Just as we would close a file after editing it, we must explicitly sever our connection to a remote database when our analysis is complete. Open connections consume resources on both our local machine and the remote server.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># terminate the SQL connection</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbDisconnect</span>(con_air, <span class="at">shutdown =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># terminate the SQL connection</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbDisconnect</span>(con_air, <span class="at">shutdown =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Terminating connections is an essential habit for responsible computing, particularly when sharing server resources in an industry or academic environment.</p>
 

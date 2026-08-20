@@ -284,7 +284,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#load-packages-and-connect-to-database-server" id="toc-load-packages-and-connect-to-database-server" class="nav-link active" data-scroll-target="#load-packages-and-connect-to-database-server"><span class="header-section-number">2.1</span> load packages and connect to database server</a></li>
   <li><a href="#sql-in-r-part-1---the-dbplyr-r-package-will-directly-translate-dplyr-code-into-sql" id="toc-sql-in-r-part-1---the-dbplyr-r-package-will-directly-translate-dplyr-code-into-sql" class="nav-link" data-scroll-target="#sql-in-r-part-1---the-dbplyr-r-package-will-directly-translate-dplyr-code-into-sql"><span class="header-section-number">2.2</span> SQL in R: Part 1 - the ‘dbplyr’ R package will directly translate ‘dplyr’ code into SQL</a></li>
   <li><a href="#sql-in-r-part-2---using-the-dbi-r-package-to-write-sql-queries-in-r-code-chunks" id="toc-sql-in-r-part-2---using-the-dbi-r-package-to-write-sql-queries-in-r-code-chunks" class="nav-link" data-scroll-target="#sql-in-r-part-2---using-the-dbi-r-package-to-write-sql-queries-in-r-code-chunks"><span class="header-section-number">2.3</span> SQL in R: Part 2 - using the DBI R package to write SQL queries in r code chunks</a></li>
-  <li><a href="#sql-in-r-part-3---writing-sql-queries-in-sql-code-chunks" id="toc-sql-in-r-part-3---writing-sql-queries-in-sql-code-chunks" class="nav-link" data-scroll-target="#sql-in-r-part-3---writing-sql-queries-in-sql-code-chunks"><span class="header-section-number">2.4</span> SQL in R: Part 3 - writing SQL queries in sql code chunks</a></li>
+  <li><a href="#sql-in-r-part-3---writing-sql-queries-in-sql-code-chunks" id="toc-sql-in-r-part-3---writing-sql-queries-in-sql-code-chunks" class="nav-link" data-scroll-target="#sql-in-r-part-3---writing-sql-queries-in-sql-code-chunks"><span class="header-section-number">2.4</span> SQL in R: Part 3 - writing SQL queries in sql code chunks</a>
+  <ul class="collapse">
+  <li><a href="#query-1" id="toc-query-1" class="nav-link" data-scroll-target="#query-1"><span class="header-section-number">2.4.1</span> query 1</a></li>
+  <li><a href="#query-2" id="toc-query-2" class="nav-link" data-scroll-target="#query-2"><span class="header-section-number">2.4.2</span> query 2</a></li>
+  <li><a href="#query-3" id="toc-query-3" class="nav-link" data-scroll-target="#query-3"><span class="header-section-number">2.4.3</span> query 3</a></li>
+  <li><a href="#query-4" id="toc-query-4" class="nav-link" data-scroll-target="#query-4"><span class="header-section-number">2.4.4</span> query 4</a></li>
+  <li><a href="#query-5" id="toc-query-5" class="nav-link" data-scroll-target="#query-5"><span class="header-section-number">2.4.5</span> query 5</a></li>
+  <li><a href="#query-6" id="toc-query-6" class="nav-link" data-scroll-target="#query-6"><span class="header-section-number">2.4.6</span> query 6</a></li>
+  <li><a href="#query-7" id="toc-query-7" class="nav-link" data-scroll-target="#query-7"><span class="header-section-number">2.4.7</span> query 7</a></li>
+  <li><a href="#query-8" id="toc-query-8" class="nav-link" data-scroll-target="#query-8"><span class="header-section-number">2.4.8</span> query 8</a></li>
+  </ul></li>
   <li><a href="#calling-sql-generated-datasets-into-r-for-data-viz" id="toc-calling-sql-generated-datasets-into-r-for-data-viz" class="nav-link" data-scroll-target="#calling-sql-generated-datasets-into-r-for-data-viz"><span class="header-section-number">2.5</span> calling <code>SQL</code> generated datasets into R for data viz</a>
   <ul class="collapse">
   <li><a href="#method-1-using-dbidbgetquery" id="toc-method-1-using-dbidbgetquery" class="nav-link" data-scroll-target="#method-1-using-dbidbgetquery"><span class="header-section-number">2.5.1</span> Method 1: using <code>DBI::dbGetQuery()</code></a></li>
@@ -335,7 +345,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dbplyr)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># access airlines database</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># connect to the airlines database</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>con_air <span class="ot">&lt;-</span> mdsr<span class="sc">::</span><span class="fu">dbConnect_scidb</span>(<span class="st">"airlines"</span>)</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
@@ -346,7 +356,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># access flights table from the airlines database</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># reference to flights table from the airlines database</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>flights <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">tbl</span>(con_air, <span class="st">"flights"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
@@ -469,7 +479,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 1     2013     2015</code></pre>
 </div>
 </div>
-<p>The data is processed on the remote server, and only the summarized one-row result is returned to our console. But how did <code>R</code> communicate this to the database? We can peek under the hood using the <code>show_query()</code> function.</p>
+<p>The result <code>yrs</code> is a <strong>lazy</strong> query — it holds the <code>SQL</code> definition, not the data itself.</p>
+<p>The data is processed on the remote server, and only the summarized one-row result is returned to our console. But how did <code>R</code> communicate this to the database? We can peek under the hood using the <code>show_query()</code> function. This reveals the SQL that <code>dbplyr</code> generated under the hood.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">show_query</span>(yrs)  </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
@@ -537,7 +548,7 @@ WHERE (`year` = 2013.0 AND ((`origin` = 'LAX' AND `dest` = 'BOS') OR (`origin` =
 </div>
 </div>
 <p>In the <code>SQL</code> translation, our <code>R</code> <code>filter()</code> statement becomes a <code>SQL</code> <code>WHERE</code> clause. Furthermore, notice that <code>SQL</code> uses a single = for logical evaluation, whereas <code>R</code> requires ==. Finally, our symbolic operators <code>&amp;</code> and <code>|</code> are translated into explicit <code>AND</code> and <code>OR</code> keywords.</p>
-<p>Once we are satisfied with our query and wish to bring the data into our local R environment for visualization or modeling, we append the <code>collect()</code> function.</p>
+<p>Once we are satisfied with our query and wish to bring the data into our local R environment for visualization or modeling, we append the <code>collect()</code> function. This should be done only when the result set is small enough to fit in memory.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>la_bos <span class="ot">&lt;-</span> la_bos <span class="sc">|&gt;</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">collect</span>()</span>
@@ -563,13 +574,54 @@ WHERE (`year` = 2013.0 AND ((`origin` = 'LAX' AND `dest` = 'BOS') OR (`origin` =
 #   cancelled &lt;int&gt;, diverted &lt;int&gt;, hour &lt;int&gt;, minute &lt;int&gt;, time_hour &lt;dttm&gt;</code></pre>
 </div>
 </div>
+<div class="callout callout-style-default callout-warning callout-titled" title="Where `dbplyr` translation breaks down">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Where <code>dbplyr</code> translation breaks down
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Notice the code below. Depending on the database backend, this either fails outright or produces a warning, because <code>cumsum()</code> requires a <code>SQL</code> <strong>window function</strong>, and not every <code>dplyr</code> function has a clean, universal <code>SQL</code> equivalent — especially once we leave basic aggregation and move into ordered, row-by-row calculations. This is precisely the kind of situation where dropping down to raw <code>SQL</code> becomes necessary rather than a stylistic choice. In the sections that follow, we introduce two ways to do exactly that.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># attempting a window function (running total) using dplyr syntax</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>dbplyr_fail <span class="ot">&lt;-</span> flights <span class="sc">|&gt;</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(origin <span class="sc">==</span> <span class="st">"ATW"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(year) <span class="sc">|&gt;</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">num_flights =</span> <span class="fu">n</span>()) <span class="sc">|&gt;</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">running_total =</span> <span class="fu">cumsum</span>(num_flights))</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">show_query</span>(dbplyr_fail)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Windowed expression `SUM(`num_flights`)` does not have explicit order.
+ℹ Please use `arrange()`, `window_order()`, or `.order` to make deterministic.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>&lt;SQL&gt;
+SELECT *, SUM(`num_flights`) OVER (ROWS UNBOUNDED PRECEDING) AS `running_total`
+FROM (
+  SELECT `year`, COUNT(*) AS `num_flights`
+  FROM `flights`
+  WHERE (`origin` = 'ATW')
+  GROUP BY `year`
+) AS `q01`</code></pre>
+</div>
+</div>
+</div>
+</div>
 </section>
 <section id="sql-in-r-part-2---using-the-dbi-r-package-to-write-sql-queries-in-r-code-chunks" class="level2" data-number="2.3">
 <h2 data-number="2.3" class="anchored" data-anchor-id="sql-in-r-part-2---using-the-dbi-r-package-to-write-sql-queries-in-r-code-chunks"><span class="header-section-number">2.3</span> SQL in R: Part 2 - using the DBI R package to write SQL queries in r code chunks</h2>
 <p>While <code>dbplyr</code> is incredibly convenient, it cannot translate every possible <code>SQL</code> function, especially highly specialized window functions or dialect-specific commands. In these instances, we can bypass the translation layer and pass raw <code>SQL</code> strings directly to the database using <code>DBI::dbGetQuery()</code>.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(con_air,</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>                <span class="st">"SELECT * FROM flights LIMIT 8;"</span>)  </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># retrieves the first 8 rows from flights</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(con_air,</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>                <span class="st">"SELECT * FROM flights LIMIT 8;"</span>)  </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  year month day dep_time sched_dep_time dep_delay arr_time sched_arr_time
 1 2013    10   1        2             10        -8      453            505
@@ -603,8 +655,8 @@ WHERE (`year` = 2013.0 AND ((`origin` = 'LAX' AND `dest` = 'BOS') OR (`origin` =
 <p>In <code>SQL</code>, the <code>*</code> symbol is a wildcard meaning “all columns.” The <code>LIMIT</code> clause is the <code>SQL</code> equivalent of <code>R</code>’s <code>head()</code> function, restricting the output size.</p>
 <p>We can also perform complex aggregations directly within the string. Here, we count the number of flights per year and order the results.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(con_air, </span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"SELECT year, count(*) AS num_flights FROM flights GROUP BY year ORDER BY num_flights;"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(con_air, </span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"SELECT year, count(*) AS num_flights FROM flights GROUP BY year ORDER BY num_flights;"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  year num_flights
 1 2015     5819079
@@ -616,13 +668,13 @@ WHERE (`year` = 2013.0 AND ((`origin` = 'LAX' AND `dest` = 'BOS') OR (`origin` =
 <section id="sql-in-r-part-3---writing-sql-queries-in-sql-code-chunks" class="level2" data-number="2.4">
 <h2 data-number="2.4" class="anchored" data-anchor-id="sql-in-r-part-3---writing-sql-queries-in-sql-code-chunks"><span class="header-section-number">2.4</span> SQL in R: Part 3 - writing SQL queries in sql code chunks</h2>
 <p>Passing <code>SQL</code> strings inside <code>R</code> functions can become visually cumbersome for long, multi-line queries. Because Quarto is a polyglot environment, we can change the code chunk type from <code>{r}</code> to <code>{sql}</code>. This provides proper syntax highlighting and allows us to write native <code>SQL</code> exactly as we would in a dedicated database client.</p>
-<p>Let us recreate our previous dbplyr queries using native <code>SQL</code> chunks.</p>
+<p>Let us recreate our previous <code>dbplyr</code> queries using native <code>SQL</code> chunks.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- display minimum and maximum year</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">MIN</span>(<span class="dt">year</span>) <span class="kw">AS</span> min_year, </span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>       <span class="fu">MAX</span>(<span class="dt">year</span>) <span class="kw">AS</span> max_year</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- display minimum and maximum year</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">MIN</span>(<span class="dt">year</span>) <span class="kw">AS</span> min_year, </span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>       <span class="fu">MAX</span>(<span class="dt">year</span>) <span class="kw">AS</span> max_year</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>1 records</caption>
@@ -642,13 +694,15 @@ WHERE (`year` = 2013.0 AND ((`origin` = 'LAX' AND `dest` = 'BOS') OR (`origin` =
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- extract flights between LAX and BOS in 2013</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span></span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> (<span class="dt">year</span> <span class="op">=</span> <span class="dv">2013</span> <span class="kw">AND</span> </span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>      ((origin <span class="op">=</span> <span class="st">'LAX'</span> <span class="kw">AND</span> dest <span class="op">=</span> <span class="st">'BOS'</span>) <span class="kw">OR</span> </span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>      (origin <span class="op">=</span> <span class="st">'BOS'</span> <span class="kw">AND</span> dest <span class="op">=</span> <span class="st">'LAX'</span>)));</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- extract flights between LAX and BOS in 2013</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> (<span class="dt">year</span> <span class="op">=</span> <span class="dv">2013</span> <span class="kw">AND</span> </span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>      ((origin <span class="op">=</span> <span class="st">'LAX'</span> <span class="kw">AND</span> dest <span class="op">=</span> <span class="st">'BOS'</span>) <span class="kw">OR</span> </span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>      (origin <span class="op">=</span> <span class="st">'BOS'</span> <span class="kw">AND</span> dest <span class="op">=</span> <span class="st">'LAX'</span>)));</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a><span class="co">-- notice the use of = (not ==) for equality comparisons</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>Displaying records 1 - 10</caption>
@@ -935,12 +989,13 @@ WHERE (`year` = 2013.0 AND ((`origin` = 'LAX' AND `dest` = 'BOS') OR (`origin` =
 </table>
 </div>
 </div>
+<p><code>LIMIT</code> restricts the number of rows returned. This is useful for previewing data without pulling the entire table from the server.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- select all columns and limit to top 2 rows</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> </span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights </span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">2</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- select all columns and limit to top 2 rows</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> </span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights </span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">2</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>2 records</caption>
@@ -1043,16 +1098,17 @@ WHERE (`year` = 2013.0 AND ((`origin` = 'LAX' AND `dest` = 'BOS') OR (`origin` =
 </table>
 </div>
 </div>
+<p><code>GROUP BY</code> partitions rows into groups sharing the same value of one or more columns, and aggregate functions like <code>COUNT()</code> are applied within each group. <code>ORDER BY</code> sorts the result; the default sort order is ascending (use <code>ORDER BY num_flights DESC</code> for descending order).</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- select year, and the computing num_flights from the flights table </span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- grouping by year</span></span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- ordering by the num_flights</span></span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="dt">year</span>, </span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>       <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> num_flights </span>
-<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights </span>
-<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> <span class="dt">year</span> </span>
-<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> num_flights;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- select year, and the computing num_flights from the flights table </span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- grouping by year</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- ordering by the num_flights</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="dt">year</span>, </span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>       <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> num_flights </span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights </span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> <span class="dt">year</span> </span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> num_flights;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>3 records</caption>
@@ -1079,7 +1135,17 @@ WHERE (`year` = 2013.0 AND ((`origin` = 'LAX' AND `dest` = 'BOS') OR (`origin` =
 </table>
 </div>
 </div>
-<p>Queries in <code>SQL</code> start with the <strong>SELECT</strong> keyword and consist of several clauses, which have to be written in this order:</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Written order of `SQL` clauses">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Written order of <code>SQL</code> clauses
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Queries</strong> in <code>SQL</code> start with the <strong>SELECT</strong> keyword and consist of several <strong>clauses</strong>, which have to be written in this order:</p>
 <ul>
 <li><p><strong>SELECT</strong> allows you to list the columns, or functions operating on columns, that you want to retrieve.</p></li>
 <li><p><strong>FROM</strong> specifies the table where the data are.</p></li>
@@ -1090,8 +1156,11 @@ WHERE (`year` = 2013.0 AND ((`origin` = 'LAX' AND `dest` = 'BOS') OR (`origin` =
 <li><p><strong>ORDER BY</strong> orders the rows of the result set.</p></li>
 <li><p><strong>LIMIT</strong> restricts the number of rows in the output.</p></li>
 </ul>
+</div>
+</div>
+<p>The following queries explore the <code>flights</code> table, starting with basic retrieval and building toward more complex aggregations.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>DESCRIBE flights;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>DESCRIBE flights;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>Displaying records 1 - 10</caption>
@@ -1190,12 +1259,15 @@ WHERE (`year` = 2013.0 AND ((`origin` = 'LAX' AND `dest` = 'BOS') OR (`origin` =
 </table>
 </div>
 </div>
+<section id="query-1" class="level3" data-number="2.4.1">
+<h3 data-number="2.4.1" class="anchored" data-anchor-id="query-1"><span class="header-section-number">2.4.1</span> query 1</h3>
+<p><code>SELECT *</code> retrieves all columns. Combined with <code>LIMIT</code>, this is a quick way to preview the contents of a table without loading all rows.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- display the first ten rows of the flights table</span></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span></span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- display the first ten rows of the flights table</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>Displaying records 1 - 10</caption>
@@ -1482,13 +1554,14 @@ WHERE (`year` = 2013.0 AND ((`origin` = 'LAX' AND `dest` = 'BOS') OR (`origin` =
 </table>
 </div>
 </div>
+<p>Essentially, <code>LIMIT</code> takes two arguments - the first skips a specific number of rows (offset), the second returns the specified row count after skipping.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- skip the first 18,008,362 rows and return the next 10</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- how did we find out the total number of rows?</span></span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span></span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
-<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">18008362</span>, <span class="dv">10</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- skip the first 18,008,362 rows and return the next 10</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- how did we find out the total number of rows? </span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">18008362</span>, <span class="dv">10</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>Displaying records 1 - 10</caption>
@@ -1775,13 +1848,130 @@ WHERE (`year` = 2013.0 AND ((`origin` = 'LAX' AND `dest` = 'BOS') OR (`origin` =
 </table>
 </div>
 </div>
-<p>We can also concatenate strings and cast them into date formats natively:</p>
+</section>
+<section id="query-2" class="level3" data-number="2.4.2">
+<h3 data-number="2.4.2" class="anchored" data-anchor-id="query-2"><span class="header-section-number">2.4.2</span> query 2</h3>
+<p>Rather than retrieving all columns, we can name specific columns in the <code>SELECT</code> clause. This reduces the amount of data transferred from the server and makes results easier to interpret.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- display year, month, day, origin, dep_time, sched_dep_time, dep_delay for the first ten rows of the flights table</span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> STR_TO_DATE(<span class="fu">CONCAT</span>(<span class="dt">year</span>, <span class="st">'-'</span>, <span class="dt">month</span>, <span class="st">'-'</span>, <span class="dt">day</span>), <span class="st">'%Y-%m-%d'</span>) <span class="kw">AS</span> <span class="st">'date'</span>, origin, dep_time, sched_dep_time, dep_delay</span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- display year, month, day, origin, dep_time, sched_dep_time, dep_delay for the first ten rows of the flights table</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="dt">year</span>, <span class="dt">month</span>, <span class="dt">day</span>, origin, dep_time, sched_dep_time, dep_delay</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Displaying records 1 - 10</caption>
+<thead>
+<tr class="header">
+<th style="text-align: right;">year</th>
+<th style="text-align: right;">month</th>
+<th style="text-align: right;">day</th>
+<th style="text-align: left;">origin</th>
+<th style="text-align: right;">dep_time</th>
+<th style="text-align: right;">sched_dep_time</th>
+<th style="text-align: right;">dep_delay</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">LAX</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">-8</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">SFO</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">2359</td>
+<td style="text-align: right;">5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">SFO</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">-4</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">SEA</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">2355</td>
+<td style="text-align: right;">19</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">LAX</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">-1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">SFO</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">LAX</td>
+<td style="text-align: right;">29</td>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">-6</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">ANC</td>
+<td style="text-align: right;">29</td>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">-6</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">SEA</td>
+<td style="text-align: right;">31</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">LAX</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;">-1</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>We can also concatenate strings and cast them into date formats natively.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> STR_TO_DATE(<span class="fu">CONCAT</span>(<span class="dt">year</span>, <span class="st">'-'</span>, <span class="dt">month</span>, <span class="st">'-'</span>, <span class="dt">day</span>), <span class="st">'%Y-%m-%d'</span>) <span class="kw">AS</span> <span class="st">'date'</span>, origin, dep_time, sched_dep_time, dep_delay</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>Displaying records 1 - 10</caption>
@@ -1869,18 +2059,21 @@ WHERE (`year` = 2013.0 AND ((`origin` = 'LAX' AND `dest` = 'BOS') OR (`origin` =
 </table>
 </div>
 </div>
-<p>Notice the difference between the <code>BETWEEN</code> and <code>IN</code> operators.</p>
+</section>
+<section id="query-3" class="level3" data-number="2.4.3">
+<h3 data-number="2.4.3" class="anchored" data-anchor-id="query-3"><span class="header-section-number">2.4.3</span> query 3</h3>
+<p><code>COUNT(*)</code> counts every row in the table regardless of <code>NULL</code> values in individual columns. Aliasing the result with <code>AS</code> gives the output column a descriptive name.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- number of flights in the flights table</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">as</span> num_rows</span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- count the total number of rows in the flights table</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> total_rows</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>1 records</caption>
 <thead>
 <tr class="header">
-<th style="text-align: right;">num_rows</th>
+<th style="text-align: right;">total_rows</th>
 </tr>
 </thead>
 <tbody>
@@ -1891,12 +2084,430 @@ WHERE (`year` = 2013.0 AND ((`origin` = 'LAX' AND `dest` = 'BOS') OR (`origin` =
 </table>
 </div>
 </div>
+<p><code>COUNT(*)</code> counts <em>rows</em>, but we often want to count <strong>unique values</strong> instead — for example, how many different carriers are in this table. In <code>R</code>, <code>n_distinct()</code> does this; in <code>SQL</code>, we pair <code>COUNT()</code> with the <code>DISTINCT</code> keyword.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- number of flights that were delayed at departure by less than 10 minutes</span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">as</span> num_rows</span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> dep_delay <span class="kw">BETWEEN</span> <span class="dv">0</span> <span class="kw">AND</span> <span class="dv">10</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">COUNT</span>(<span class="kw">DISTINCT</span> carrier) <span class="kw">AS</span> num_carriers</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>1 records</caption>
+<thead>
+<tr class="header">
+<th style="text-align: right;">num_carriers</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">17</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="query-4" class="level3" data-number="2.4.4">
+<h3 data-number="2.4.4" class="anchored" data-anchor-id="query-4"><span class="header-section-number">2.4.4</span> query 4</h3>
+<p><code>WHERE</code> filters rows before any aggregation takes place. Here we restrict to flights from ATW to ORD in 2013, combining multiple conditions with <code>AND</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- extract all info about flights that flew from Appleton (ATW) to Chicago (ORD) in 2013</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> origin <span class="op">=</span> <span class="st">'ATW'</span> <span class="kw">AND</span> dest <span class="op">=</span> <span class="st">'ORD'</span> <span class="kw">AND</span> <span class="dt">year</span> <span class="op">=</span> <span class="dv">2013</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Displaying records 1 - 10</caption>
+<colgroup>
+<col style="width: 2%">
+<col style="width: 3%">
+<col style="width: 2%">
+<col style="width: 4%">
+<col style="width: 8%">
+<col style="width: 5%">
+<col style="width: 4%">
+<col style="width: 8%">
+<col style="width: 5%">
+<col style="width: 4%">
+<col style="width: 4%">
+<col style="width: 3%">
+<col style="width: 3%">
+<col style="width: 2%">
+<col style="width: 4%">
+<col style="width: 4%">
+<col style="width: 5%">
+<col style="width: 4%">
+<col style="width: 2%">
+<col style="width: 3%">
+<col style="width: 10%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">year</th>
+<th style="text-align: right;">month</th>
+<th style="text-align: right;">day</th>
+<th style="text-align: right;">dep_time</th>
+<th style="text-align: right;">sched_dep_time</th>
+<th style="text-align: right;">dep_delay</th>
+<th style="text-align: right;">arr_time</th>
+<th style="text-align: right;">sched_arr_time</th>
+<th style="text-align: right;">arr_delay</th>
+<th style="text-align: left;">carrier</th>
+<th style="text-align: left;">tailnum</th>
+<th style="text-align: right;">flight</th>
+<th style="text-align: left;">origin</th>
+<th style="text-align: left;">dest</th>
+<th style="text-align: right;">air_time</th>
+<th style="text-align: right;">distance</th>
+<th style="text-align: right;">cancelled</th>
+<th style="text-align: right;">diverted</th>
+<th style="text-align: right;">hour</th>
+<th style="text-align: right;">minute</th>
+<th style="text-align: left;">time_hour</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">543</td>
+<td style="text-align: right;">545</td>
+<td style="text-align: right;">-2</td>
+<td style="text-align: right;">633</td>
+<td style="text-align: right;">640</td>
+<td style="text-align: right;">-7</td>
+<td style="text-align: left;">EV</td>
+<td style="text-align: left;">N14904</td>
+<td style="text-align: right;">6082</td>
+<td style="text-align: left;">ATW</td>
+<td style="text-align: left;">ORD</td>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">160</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: left;">2013-10-01 05:45:00</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">927</td>
+<td style="text-align: right;">928</td>
+<td style="text-align: right;">-1</td>
+<td style="text-align: right;">1027</td>
+<td style="text-align: right;">1023</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">OO</td>
+<td style="text-align: left;">N917SW</td>
+<td style="text-align: right;">5650</td>
+<td style="text-align: left;">ATW</td>
+<td style="text-align: left;">ORD</td>
+<td style="text-align: right;">37</td>
+<td style="text-align: right;">160</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">28</td>
+<td style="text-align: left;">2013-10-01 09:28:00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1137</td>
+<td style="text-align: right;">1137</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1240</td>
+<td style="text-align: right;">1230</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: left;">EV</td>
+<td style="text-align: left;">N14952</td>
+<td style="text-align: right;">5852</td>
+<td style="text-align: left;">ATW</td>
+<td style="text-align: left;">ORD</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">160</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">37</td>
+<td style="text-align: left;">2013-10-01 11:37:00</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1312</td>
+<td style="text-align: right;">1322</td>
+<td style="text-align: right;">-10</td>
+<td style="text-align: right;">1404</td>
+<td style="text-align: right;">1417</td>
+<td style="text-align: right;">-13</td>
+<td style="text-align: left;">EV</td>
+<td style="text-align: left;">N15555</td>
+<td style="text-align: right;">6131</td>
+<td style="text-align: left;">ATW</td>
+<td style="text-align: left;">ORD</td>
+<td style="text-align: right;">36</td>
+<td style="text-align: right;">160</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: left;">2013-10-01 13:22:00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1619</td>
+<td style="text-align: right;">1627</td>
+<td style="text-align: right;">-8</td>
+<td style="text-align: right;">1728</td>
+<td style="text-align: right;">1724</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">EV</td>
+<td style="text-align: left;">N12922</td>
+<td style="text-align: right;">6079</td>
+<td style="text-align: left;">ATW</td>
+<td style="text-align: left;">ORD</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;">160</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: left;">2013-10-01 16:27:00</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1818</td>
+<td style="text-align: right;">1823</td>
+<td style="text-align: right;">-5</td>
+<td style="text-align: right;">1920</td>
+<td style="text-align: right;">1922</td>
+<td style="text-align: right;">-2</td>
+<td style="text-align: left;">EV</td>
+<td style="text-align: left;">N15574</td>
+<td style="text-align: right;">4261</td>
+<td style="text-align: left;">ATW</td>
+<td style="text-align: left;">ORD</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;">160</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">23</td>
+<td style="text-align: left;">2013-10-01 18:23:00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">542</td>
+<td style="text-align: right;">545</td>
+<td style="text-align: right;">-3</td>
+<td style="text-align: right;">631</td>
+<td style="text-align: right;">640</td>
+<td style="text-align: right;">-9</td>
+<td style="text-align: left;">EV</td>
+<td style="text-align: left;">N14902</td>
+<td style="text-align: right;">6082</td>
+<td style="text-align: left;">ATW</td>
+<td style="text-align: left;">ORD</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;">160</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: left;">2013-10-02 05:45:00</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">923</td>
+<td style="text-align: right;">928</td>
+<td style="text-align: right;">-5</td>
+<td style="text-align: right;">1018</td>
+<td style="text-align: right;">1023</td>
+<td style="text-align: right;">-5</td>
+<td style="text-align: left;">OO</td>
+<td style="text-align: left;">N920SW</td>
+<td style="text-align: right;">5650</td>
+<td style="text-align: left;">ATW</td>
+<td style="text-align: left;">ORD</td>
+<td style="text-align: right;">37</td>
+<td style="text-align: right;">160</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">28</td>
+<td style="text-align: left;">2013-10-02 09:28:00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1127</td>
+<td style="text-align: right;">1137</td>
+<td style="text-align: right;">-10</td>
+<td style="text-align: right;">1212</td>
+<td style="text-align: right;">1230</td>
+<td style="text-align: right;">-18</td>
+<td style="text-align: left;">EV</td>
+<td style="text-align: left;">N13978</td>
+<td style="text-align: right;">5852</td>
+<td style="text-align: left;">ATW</td>
+<td style="text-align: left;">ORD</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;">160</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">37</td>
+<td style="text-align: left;">2013-10-02 11:37:00</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1307</td>
+<td style="text-align: right;">1322</td>
+<td style="text-align: right;">-15</td>
+<td style="text-align: right;">1353</td>
+<td style="text-align: right;">1417</td>
+<td style="text-align: right;">-24</td>
+<td style="text-align: left;">EV</td>
+<td style="text-align: left;">N13997</td>
+<td style="text-align: right;">6131</td>
+<td style="text-align: left;">ATW</td>
+<td style="text-align: left;">ORD</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">160</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: left;">2013-10-02 13:22:00</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Logical operators `AND` and `OR`">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Logical operators <code>AND</code> and <code>OR</code>
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Logical operators in <code>SQL</code> evaluate in a strict order: <code>AND</code> is evaluated before <code>OR</code>.</p>
+<p>Imagine we are looking at our <code>flights</code> table and we want to find all flights in the year 2013 that either departed from Appleton (ATW) or arrived in Chicago (ORD).</p>
+<p>It is tempting to write the query exactly as we speak it:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> num_flights</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> <span class="dt">year</span> <span class="op">=</span> <span class="dv">2013</span> <span class="kw">AND</span> origin <span class="op">=</span> <span class="st">'ATW'</span> <span class="kw">OR</span> dest <span class="op">=</span> <span class="st">'ORD'</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>1 records</caption>
+<thead>
+<tr class="header">
+<th style="text-align: right;">num_flights</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">910681</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Because <code>AND</code> has higher precedence, the <code>SQL</code> engine secretly groups the query like this:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">COUNT</span>(<span class="op">*</span>)</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> (<span class="dt">year</span> <span class="op">=</span> <span class="dv">2013</span> <span class="kw">AND</span> origin <span class="op">=</span> <span class="st">'ATW'</span>) <span class="kw">OR</span> dest <span class="op">=</span> <span class="st">'ORD'</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>1 records</caption>
+<thead>
+<tr class="header">
+<th style="text-align: right;">COUNT(*)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">910681</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>What this actually returns:</p>
+<ol type="1">
+<li><p>Every flight that departed from ATW in 2013.</p></li>
+<li><p>PLUS every single flight that landed in ORD, regardless of the year, and regardless of where it came from.</p></li>
+</ol>
+<p>Instead of returning a small subset of specific 2013 flights, our query returns millions of rows, pulling in ORD flights from 2001, 2010, etc.</p>
+<p>To fix this, we use parentheses to force the database to evaluate the <code>OR</code> condition as a single, combined logical unit before it evaluates the <code>AND</code> condition.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> num_flights</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> <span class="dt">year</span> <span class="op">=</span> <span class="dv">2013</span> <span class="kw">AND</span> (origin <span class="op">=</span> <span class="st">'ATW'</span> <span class="kw">OR</span> dest <span class="op">=</span> <span class="st">'ORD'</span>);</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>1 records</caption>
+<thead>
+<tr class="header">
+<th style="text-align: right;">num_flights</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">309790</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>How <code>SQL</code> evaluates this:</p>
+<ol type="1">
+<li><p>First, it looks inside the parentheses: “Is the origin ATW, <code>OR</code> is the destination ORD?” (Returns True or False for each row).</p></li>
+<li><p>Then, it evaluates the <code>AND</code>: “Is the year 2013 <code>AND</code> did the previous step return True?”</p></li>
+</ol>
+<p>By wrapping the <code>OR</code> statements in brackets, we ensure that the <code>year = 2013</code> condition acts as a strict filter applied to both the origin and the destination checks.</p>
+<p>A Golden Rule for <code>SQL</code>:</p>
+<p><strong>Whenever you have a <code>WHERE</code> clause that mixes <code>AND</code> and <code>OR</code>, always use parentheses. Even if you memorize the precedence rules, parentheses make your code instantly readable to your colleagues and future self, eliminating any ambiguity about your analytical intentions.</strong></p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="`BETWEEN` vs `IN`">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span><code>BETWEEN</code> vs <code>IN</code>
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Notice the difference between the <code>BETWEEN</code> and <code>IN</code> operators.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- number of flights that were delayed at departure by less than 10 minutes</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">as</span> num_rows</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> dep_delay <span class="kw">BETWEEN</span> <span class="dv">0</span> <span class="kw">AND</span> <span class="dv">10</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>1 records</caption>
@@ -1914,11 +2525,11 @@ WHERE (`year` = 2013.0 AND ((`origin` = 'LAX' AND `dest` = 'BOS') OR (`origin` =
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- number of flights that were delayed by either 0 or 10 minutes</span></span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">as</span> num_rows</span>
-<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
-<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> dep_delay <span class="kw">IN</span> (<span class="dv">0</span>,<span class="dv">10</span>);</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- number of flights that were delayed by either 0 or 10 minutes</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">as</span> num_rows</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> dep_delay <span class="kw">IN</span> (<span class="dv">0</span>,<span class="dv">10</span>);</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>1 records</caption>
@@ -1935,907 +2546,26 @@ WHERE (`year` = 2013.0 AND ((`origin` = 'LAX' AND `dest` = 'BOS') OR (`origin` =
 </table>
 </div>
 </div>
-<div class="callout callout-style-default callout-warning callout-titled" title="Operator Precedence Edge Case">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Warning</span>Operator Precedence Edge Case
 </div>
 </div>
-<div class="callout-body-container callout-body">
-<p>Logical operators in <code>SQL</code> evaluate in a strict order: <code>AND</code> is evaluated before <code>OR</code>.</p>
-<p>Imagine we are looking at our <code>flights</code> table and we want to find all flights in the year 2013 that either departed from Appleton (ATW) or arrived in Chicago (ORD).</p>
-<p>It is tempting to write the query exactly as we speak it:</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span></span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> <span class="dt">year</span> <span class="op">=</span> <span class="dv">2013</span> <span class="kw">AND</span> origin <span class="op">=</span> <span class="st">'ATW'</span> <span class="kw">OR</span> dest <span class="op">=</span> <span class="st">'ORD'</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output-display">
-<table class="caption-top table table-sm table-striped small">
-<caption>Displaying records 1 - 10</caption>
-<colgroup>
-<col style="width: 2%">
-<col style="width: 3%">
-<col style="width: 2%">
-<col style="width: 4%">
-<col style="width: 8%">
-<col style="width: 5%">
-<col style="width: 4%">
-<col style="width: 8%">
-<col style="width: 5%">
-<col style="width: 4%">
-<col style="width: 4%">
-<col style="width: 3%">
-<col style="width: 3%">
-<col style="width: 2%">
-<col style="width: 4%">
-<col style="width: 4%">
-<col style="width: 5%">
-<col style="width: 4%">
-<col style="width: 2%">
-<col style="width: 3%">
-<col style="width: 10%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: right;">year</th>
-<th style="text-align: right;">month</th>
-<th style="text-align: right;">day</th>
-<th style="text-align: right;">dep_time</th>
-<th style="text-align: right;">sched_dep_time</th>
-<th style="text-align: right;">dep_delay</th>
-<th style="text-align: right;">arr_time</th>
-<th style="text-align: right;">sched_arr_time</th>
-<th style="text-align: right;">arr_delay</th>
-<th style="text-align: left;">carrier</th>
-<th style="text-align: left;">tailnum</th>
-<th style="text-align: right;">flight</th>
-<th style="text-align: left;">origin</th>
-<th style="text-align: left;">dest</th>
-<th style="text-align: right;">air_time</th>
-<th style="text-align: right;">distance</th>
-<th style="text-align: right;">cancelled</th>
-<th style="text-align: right;">diverted</th>
-<th style="text-align: right;">hour</th>
-<th style="text-align: right;">minute</th>
-<th style="text-align: left;">time_hour</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: right;">2013</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">14</td>
-<td style="text-align: right;">2355</td>
-<td style="text-align: right;">19</td>
-<td style="text-align: right;">544</td>
-<td style="text-align: right;">540</td>
-<td style="text-align: right;">4</td>
-<td style="text-align: left;">AA</td>
-<td style="text-align: left;">N3ENAA</td>
-<td style="text-align: right;">2392</td>
-<td style="text-align: left;">SEA</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">191</td>
-<td style="text-align: right;">1721</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">23</td>
-<td style="text-align: right;">55</td>
-<td style="text-align: left;">2013-10-01 23:55:00</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">2015</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">6</td>
-<td style="text-align: right;">2359</td>
-<td style="text-align: right;">7</td>
-<td style="text-align: right;">551</td>
-<td style="text-align: right;">545</td>
-<td style="text-align: right;">6</td>
-<td style="text-align: left;">AA</td>
-<td style="text-align: left;">N3KKAA</td>
-<td style="text-align: right;">1283</td>
-<td style="text-align: left;">SEA</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">198</td>
-<td style="text-align: right;">1721</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">23</td>
-<td style="text-align: right;">59</td>
-<td style="text-align: left;">2015-10-01 23:59:00</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">2014</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">17</td>
-<td style="text-align: right;">2350</td>
-<td style="text-align: right;">27</td>
-<td style="text-align: right;">622</td>
-<td style="text-align: right;">545</td>
-<td style="text-align: right;">37</td>
-<td style="text-align: left;">AA</td>
-<td style="text-align: left;">N3EYAA</td>
-<td style="text-align: right;">1062</td>
-<td style="text-align: left;">LAX</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">216</td>
-<td style="text-align: right;">1744</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">23</td>
-<td style="text-align: right;">50</td>
-<td style="text-align: left;">2014-10-01 23:50:00</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">2015</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">11</td>
-<td style="text-align: right;">14</td>
-<td style="text-align: right;">-3</td>
-<td style="text-align: right;">614</td>
-<td style="text-align: right;">627</td>
-<td style="text-align: right;">-13</td>
-<td style="text-align: left;">UA</td>
-<td style="text-align: left;">N68452</td>
-<td style="text-align: right;">1171</td>
-<td style="text-align: left;">LAX</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">205</td>
-<td style="text-align: right;">1744</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">14</td>
-<td style="text-align: left;">2015-10-01 00:14:00</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">2015</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">13</td>
-<td style="text-align: right;">14</td>
-<td style="text-align: right;">-1</td>
-<td style="text-align: right;">602</td>
-<td style="text-align: right;">635</td>
-<td style="text-align: right;">-33</td>
-<td style="text-align: left;">UA</td>
-<td style="text-align: left;">N495UA</td>
-<td style="text-align: right;">684</td>
-<td style="text-align: left;">SFO</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">212</td>
-<td style="text-align: right;">1846</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">14</td>
-<td style="text-align: left;">2015-10-01 00:14:00</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">2014</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">40</td>
-<td style="text-align: right;">2355</td>
-<td style="text-align: right;">45</td>
-<td style="text-align: right;">627</td>
-<td style="text-align: right;">540</td>
-<td style="text-align: right;">47</td>
-<td style="text-align: left;">AA</td>
-<td style="text-align: left;">N3BKAA</td>
-<td style="text-align: right;">2486</td>
-<td style="text-align: left;">SEA</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">199</td>
-<td style="text-align: right;">1721</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">23</td>
-<td style="text-align: right;">55</td>
-<td style="text-align: left;">2014-10-01 23:55:00</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">2014</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">53</td>
-<td style="text-align: right;">2330</td>
-<td style="text-align: right;">83</td>
-<td style="text-align: right;">659</td>
-<td style="text-align: right;">530</td>
-<td style="text-align: right;">89</td>
-<td style="text-align: left;">AA</td>
-<td style="text-align: left;">N3EWAA</td>
-<td style="text-align: right;">1522</td>
-<td style="text-align: left;">SFO</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">219</td>
-<td style="text-align: right;">1846</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">23</td>
-<td style="text-align: right;">30</td>
-<td style="text-align: left;">2014-10-01 23:30:00</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">2013</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">450</td>
-<td style="text-align: right;">500</td>
-<td style="text-align: right;">-10</td>
-<td style="text-align: right;">549</td>
-<td style="text-align: right;">559</td>
-<td style="text-align: right;">-10</td>
-<td style="text-align: left;">EV</td>
-<td style="text-align: left;">N15555</td>
-<td style="text-align: right;">6064</td>
-<td style="text-align: left;">CID</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">39</td>
-<td style="text-align: right;">196</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">5</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: left;">2013-10-01 05:00:00</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">2015</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">42</td>
-<td style="text-align: right;">50</td>
-<td style="text-align: right;">-8</td>
-<td style="text-align: right;">622</td>
-<td style="text-align: right;">644</td>
-<td style="text-align: right;">-22</td>
-<td style="text-align: left;">AS</td>
-<td style="text-align: left;">N423AS</td>
-<td style="text-align: right;">20</td>
-<td style="text-align: left;">SEA</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">192</td>
-<td style="text-align: right;">1721</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">50</td>
-<td style="text-align: left;">2015-10-01 00:50:00</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">2014</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">127</td>
-<td style="text-align: right;">2345</td>
-<td style="text-align: right;">102</td>
-<td style="text-align: right;">709</td>
-<td style="text-align: right;">532</td>
-<td style="text-align: right;">97</td>
-<td style="text-align: left;">UA</td>
-<td style="text-align: left;">N38727</td>
-<td style="text-align: right;">1215</td>
-<td style="text-align: left;">SEA</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">204</td>
-<td style="text-align: right;">1721</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">23</td>
-<td style="text-align: right;">45</td>
-<td style="text-align: left;">2014-10-01 23:45:00</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<p>Because <code>AND</code> has higher precedence, the <code>SQL</code> engine secretly groups the query like this:</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span></span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> (<span class="dt">year</span> <span class="op">=</span> <span class="dv">2013</span> <span class="kw">AND</span> origin <span class="op">=</span> <span class="st">'ATW'</span>) <span class="kw">OR</span> dest <span class="op">=</span> <span class="st">'ORD'</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output-display">
-<table class="caption-top table table-sm table-striped small">
-<caption>Displaying records 1 - 10</caption>
-<colgroup>
-<col style="width: 2%">
-<col style="width: 3%">
-<col style="width: 2%">
-<col style="width: 4%">
-<col style="width: 8%">
-<col style="width: 5%">
-<col style="width: 4%">
-<col style="width: 8%">
-<col style="width: 5%">
-<col style="width: 4%">
-<col style="width: 4%">
-<col style="width: 3%">
-<col style="width: 3%">
-<col style="width: 2%">
-<col style="width: 4%">
-<col style="width: 4%">
-<col style="width: 5%">
-<col style="width: 4%">
-<col style="width: 2%">
-<col style="width: 3%">
-<col style="width: 10%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: right;">year</th>
-<th style="text-align: right;">month</th>
-<th style="text-align: right;">day</th>
-<th style="text-align: right;">dep_time</th>
-<th style="text-align: right;">sched_dep_time</th>
-<th style="text-align: right;">dep_delay</th>
-<th style="text-align: right;">arr_time</th>
-<th style="text-align: right;">sched_arr_time</th>
-<th style="text-align: right;">arr_delay</th>
-<th style="text-align: left;">carrier</th>
-<th style="text-align: left;">tailnum</th>
-<th style="text-align: right;">flight</th>
-<th style="text-align: left;">origin</th>
-<th style="text-align: left;">dest</th>
-<th style="text-align: right;">air_time</th>
-<th style="text-align: right;">distance</th>
-<th style="text-align: right;">cancelled</th>
-<th style="text-align: right;">diverted</th>
-<th style="text-align: right;">hour</th>
-<th style="text-align: right;">minute</th>
-<th style="text-align: left;">time_hour</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: right;">2013</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">14</td>
-<td style="text-align: right;">2355</td>
-<td style="text-align: right;">19</td>
-<td style="text-align: right;">544</td>
-<td style="text-align: right;">540</td>
-<td style="text-align: right;">4</td>
-<td style="text-align: left;">AA</td>
-<td style="text-align: left;">N3ENAA</td>
-<td style="text-align: right;">2392</td>
-<td style="text-align: left;">SEA</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">191</td>
-<td style="text-align: right;">1721</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">23</td>
-<td style="text-align: right;">55</td>
-<td style="text-align: left;">2013-10-01 23:55:00</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">2015</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">6</td>
-<td style="text-align: right;">2359</td>
-<td style="text-align: right;">7</td>
-<td style="text-align: right;">551</td>
-<td style="text-align: right;">545</td>
-<td style="text-align: right;">6</td>
-<td style="text-align: left;">AA</td>
-<td style="text-align: left;">N3KKAA</td>
-<td style="text-align: right;">1283</td>
-<td style="text-align: left;">SEA</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">198</td>
-<td style="text-align: right;">1721</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">23</td>
-<td style="text-align: right;">59</td>
-<td style="text-align: left;">2015-10-01 23:59:00</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">2014</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">17</td>
-<td style="text-align: right;">2350</td>
-<td style="text-align: right;">27</td>
-<td style="text-align: right;">622</td>
-<td style="text-align: right;">545</td>
-<td style="text-align: right;">37</td>
-<td style="text-align: left;">AA</td>
-<td style="text-align: left;">N3EYAA</td>
-<td style="text-align: right;">1062</td>
-<td style="text-align: left;">LAX</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">216</td>
-<td style="text-align: right;">1744</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">23</td>
-<td style="text-align: right;">50</td>
-<td style="text-align: left;">2014-10-01 23:50:00</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">2015</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">11</td>
-<td style="text-align: right;">14</td>
-<td style="text-align: right;">-3</td>
-<td style="text-align: right;">614</td>
-<td style="text-align: right;">627</td>
-<td style="text-align: right;">-13</td>
-<td style="text-align: left;">UA</td>
-<td style="text-align: left;">N68452</td>
-<td style="text-align: right;">1171</td>
-<td style="text-align: left;">LAX</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">205</td>
-<td style="text-align: right;">1744</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">14</td>
-<td style="text-align: left;">2015-10-01 00:14:00</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">2015</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">13</td>
-<td style="text-align: right;">14</td>
-<td style="text-align: right;">-1</td>
-<td style="text-align: right;">602</td>
-<td style="text-align: right;">635</td>
-<td style="text-align: right;">-33</td>
-<td style="text-align: left;">UA</td>
-<td style="text-align: left;">N495UA</td>
-<td style="text-align: right;">684</td>
-<td style="text-align: left;">SFO</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">212</td>
-<td style="text-align: right;">1846</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">14</td>
-<td style="text-align: left;">2015-10-01 00:14:00</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">2014</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">40</td>
-<td style="text-align: right;">2355</td>
-<td style="text-align: right;">45</td>
-<td style="text-align: right;">627</td>
-<td style="text-align: right;">540</td>
-<td style="text-align: right;">47</td>
-<td style="text-align: left;">AA</td>
-<td style="text-align: left;">N3BKAA</td>
-<td style="text-align: right;">2486</td>
-<td style="text-align: left;">SEA</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">199</td>
-<td style="text-align: right;">1721</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">23</td>
-<td style="text-align: right;">55</td>
-<td style="text-align: left;">2014-10-01 23:55:00</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">2014</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">53</td>
-<td style="text-align: right;">2330</td>
-<td style="text-align: right;">83</td>
-<td style="text-align: right;">659</td>
-<td style="text-align: right;">530</td>
-<td style="text-align: right;">89</td>
-<td style="text-align: left;">AA</td>
-<td style="text-align: left;">N3EWAA</td>
-<td style="text-align: right;">1522</td>
-<td style="text-align: left;">SFO</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">219</td>
-<td style="text-align: right;">1846</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">23</td>
-<td style="text-align: right;">30</td>
-<td style="text-align: left;">2014-10-01 23:30:00</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">2013</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">450</td>
-<td style="text-align: right;">500</td>
-<td style="text-align: right;">-10</td>
-<td style="text-align: right;">549</td>
-<td style="text-align: right;">559</td>
-<td style="text-align: right;">-10</td>
-<td style="text-align: left;">EV</td>
-<td style="text-align: left;">N15555</td>
-<td style="text-align: right;">6064</td>
-<td style="text-align: left;">CID</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">39</td>
-<td style="text-align: right;">196</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">5</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: left;">2013-10-01 05:00:00</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">2015</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">42</td>
-<td style="text-align: right;">50</td>
-<td style="text-align: right;">-8</td>
-<td style="text-align: right;">622</td>
-<td style="text-align: right;">644</td>
-<td style="text-align: right;">-22</td>
-<td style="text-align: left;">AS</td>
-<td style="text-align: left;">N423AS</td>
-<td style="text-align: right;">20</td>
-<td style="text-align: left;">SEA</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">192</td>
-<td style="text-align: right;">1721</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">50</td>
-<td style="text-align: left;">2015-10-01 00:50:00</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">2014</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">127</td>
-<td style="text-align: right;">2345</td>
-<td style="text-align: right;">102</td>
-<td style="text-align: right;">709</td>
-<td style="text-align: right;">532</td>
-<td style="text-align: right;">97</td>
-<td style="text-align: left;">UA</td>
-<td style="text-align: left;">N38727</td>
-<td style="text-align: right;">1215</td>
-<td style="text-align: left;">SEA</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">204</td>
-<td style="text-align: right;">1721</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">23</td>
-<td style="text-align: right;">45</td>
-<td style="text-align: left;">2014-10-01 23:45:00</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<p>What this actually returns:</p>
-<ol type="1">
-<li><p>Every flight that departed from ATW in 2013.</p></li>
-<li><p>PLUS every single flight that landed in ORD, regardless of the year, and regardless of where it came from.</p></li>
-</ol>
-<p>Instead of returning a small subset of specific 2013 flights, our query will return millions of rows, pulling in ORD flights from 2001, 2010, etc.</p>
-<p>To fix this, we use parentheses to force the database to evaluate the OR condition as a single, combined logical unit before it evaluates the AND condition.</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> <span class="dt">year</span> <span class="op">=</span> <span class="dv">2013</span> <span class="kw">AND</span> (origin <span class="op">=</span> <span class="st">'ATW'</span> <span class="kw">OR</span> dest <span class="op">=</span> <span class="st">'ORD'</span>);</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output-display">
-<table class="caption-top table table-sm table-striped small">
-<caption>Displaying records 1 - 10</caption>
-<colgroup>
-<col style="width: 2%">
-<col style="width: 3%">
-<col style="width: 2%">
-<col style="width: 4%">
-<col style="width: 8%">
-<col style="width: 5%">
-<col style="width: 4%">
-<col style="width: 8%">
-<col style="width: 5%">
-<col style="width: 4%">
-<col style="width: 4%">
-<col style="width: 3%">
-<col style="width: 3%">
-<col style="width: 2%">
-<col style="width: 4%">
-<col style="width: 4%">
-<col style="width: 5%">
-<col style="width: 4%">
-<col style="width: 2%">
-<col style="width: 3%">
-<col style="width: 10%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: right;">year</th>
-<th style="text-align: right;">month</th>
-<th style="text-align: right;">day</th>
-<th style="text-align: right;">dep_time</th>
-<th style="text-align: right;">sched_dep_time</th>
-<th style="text-align: right;">dep_delay</th>
-<th style="text-align: right;">arr_time</th>
-<th style="text-align: right;">sched_arr_time</th>
-<th style="text-align: right;">arr_delay</th>
-<th style="text-align: left;">carrier</th>
-<th style="text-align: left;">tailnum</th>
-<th style="text-align: right;">flight</th>
-<th style="text-align: left;">origin</th>
-<th style="text-align: left;">dest</th>
-<th style="text-align: right;">air_time</th>
-<th style="text-align: right;">distance</th>
-<th style="text-align: right;">cancelled</th>
-<th style="text-align: right;">diverted</th>
-<th style="text-align: right;">hour</th>
-<th style="text-align: right;">minute</th>
-<th style="text-align: left;">time_hour</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: right;">2013</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">14</td>
-<td style="text-align: right;">2355</td>
-<td style="text-align: right;">19</td>
-<td style="text-align: right;">544</td>
-<td style="text-align: right;">540</td>
-<td style="text-align: right;">4</td>
-<td style="text-align: left;">AA</td>
-<td style="text-align: left;">N3ENAA</td>
-<td style="text-align: right;">2392</td>
-<td style="text-align: left;">SEA</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">191</td>
-<td style="text-align: right;">1721</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">23</td>
-<td style="text-align: right;">55</td>
-<td style="text-align: left;">2013-10-01 23:55:00</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">2013</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">450</td>
-<td style="text-align: right;">500</td>
-<td style="text-align: right;">-10</td>
-<td style="text-align: right;">549</td>
-<td style="text-align: right;">559</td>
-<td style="text-align: right;">-10</td>
-<td style="text-align: left;">EV</td>
-<td style="text-align: left;">N15555</td>
-<td style="text-align: right;">6064</td>
-<td style="text-align: left;">CID</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">39</td>
-<td style="text-align: right;">196</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">5</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: left;">2013-10-01 05:00:00</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">2013</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">454</td>
-<td style="text-align: right;">500</td>
-<td style="text-align: right;">-6</td>
-<td style="text-align: right;">532</td>
-<td style="text-align: right;">543</td>
-<td style="text-align: right;">-11</td>
-<td style="text-align: left;">OO</td>
-<td style="text-align: left;">N964SW</td>
-<td style="text-align: right;">5393</td>
-<td style="text-align: left;">MKE</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">20</td>
-<td style="text-align: right;">67</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">5</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: left;">2013-10-01 05:00:00</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">2013</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">454</td>
-<td style="text-align: right;">500</td>
-<td style="text-align: right;">-6</td>
-<td style="text-align: right;">541</td>
-<td style="text-align: right;">551</td>
-<td style="text-align: right;">-10</td>
-<td style="text-align: left;">OO</td>
-<td style="text-align: left;">N928SW</td>
-<td style="text-align: right;">6469</td>
-<td style="text-align: left;">MSN</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">29</td>
-<td style="text-align: right;">108</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">5</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: left;">2013-10-01 05:00:00</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">2013</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">509</td>
-<td style="text-align: right;">515</td>
-<td style="text-align: right;">-6</td>
-<td style="text-align: right;">559</td>
-<td style="text-align: right;">601</td>
-<td style="text-align: right;">-2</td>
-<td style="text-align: left;">EV</td>
-<td style="text-align: left;">N14952</td>
-<td style="text-align: right;">5826</td>
-<td style="text-align: left;">PIA</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">31</td>
-<td style="text-align: right;">130</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">5</td>
-<td style="text-align: right;">15</td>
-<td style="text-align: left;">2013-10-01 05:15:00</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">2013</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">521</td>
-<td style="text-align: right;">530</td>
-<td style="text-align: right;">-9</td>
-<td style="text-align: right;">618</td>
-<td style="text-align: right;">623</td>
-<td style="text-align: right;">-5</td>
-<td style="text-align: left;">EV</td>
-<td style="text-align: left;">N21130</td>
-<td style="text-align: right;">4092</td>
-<td style="text-align: left;">MLI</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">34</td>
-<td style="text-align: right;">139</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">5</td>
-<td style="text-align: right;">30</td>
-<td style="text-align: left;">2013-10-01 05:30:00</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">2013</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">522</td>
-<td style="text-align: right;">530</td>
-<td style="text-align: right;">-8</td>
-<td style="text-align: right;">513</td>
-<td style="text-align: right;">529</td>
-<td style="text-align: right;">-16</td>
-<td style="text-align: left;">EV</td>
-<td style="text-align: left;">N14972</td>
-<td style="text-align: right;">5887</td>
-<td style="text-align: left;">LAN</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">39</td>
-<td style="text-align: right;">179</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">5</td>
-<td style="text-align: right;">30</td>
-<td style="text-align: left;">2013-10-01 05:30:00</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">2013</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">530</td>
-<td style="text-align: right;">530</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">507</td>
-<td style="text-align: right;">516</td>
-<td style="text-align: right;">-9</td>
-<td style="text-align: left;">YV</td>
-<td style="text-align: left;">N514MJ</td>
-<td style="text-align: right;">3794</td>
-<td style="text-align: left;">SBN</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">21</td>
-<td style="text-align: right;">84</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">5</td>
-<td style="text-align: right;">30</td>
-<td style="text-align: left;">2013-10-01 05:30:00</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">2013</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">533</td>
-<td style="text-align: right;">540</td>
-<td style="text-align: right;">-7</td>
-<td style="text-align: right;">1134</td>
-<td style="text-align: right;">1200</td>
-<td style="text-align: right;">-26</td>
-<td style="text-align: left;">AA</td>
-<td style="text-align: left;">N3FTAA</td>
-<td style="text-align: right;">1494</td>
-<td style="text-align: left;">SFO</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">214</td>
-<td style="text-align: right;">1846</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">5</td>
-<td style="text-align: right;">40</td>
-<td style="text-align: left;">2013-10-01 05:40:00</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">2013</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">534</td>
-<td style="text-align: right;">547</td>
-<td style="text-align: right;">-13</td>
-<td style="text-align: right;">711</td>
-<td style="text-align: right;">722</td>
-<td style="text-align: right;">-11</td>
-<td style="text-align: left;">EV</td>
-<td style="text-align: left;">N13975</td>
-<td style="text-align: right;">3832</td>
-<td style="text-align: left;">LNK</td>
-<td style="text-align: left;">ORD</td>
-<td style="text-align: right;">77</td>
-<td style="text-align: right;">466</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">5</td>
-<td style="text-align: right;">47</td>
-<td style="text-align: left;">2013-10-01 05:47:00</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<p>How <code>SQL</code> evaluates this:</p>
-<ol type="1">
-<li><p>First, it looks inside the parentheses: “Is the origin ATW, <code>OR</code> is the destination ORD?” (Returns True or False for each row).</p></li>
-<li><p>Then, it evaluates the <code>AND</code>: “Is the year 2013 <code>AND</code> did the previous step return True?”</p></li>
-</ol>
-<p>By wrapping the <code>OR</code> statements in brackets, we ensure that the <code>year = 2013</code> condition acts as a strict filter applied to both the origin and the destination checks.</p>
-<p>A Golden Rule for <code>SQL</code>:</p>
-<p><em>Whenever you have a <code>WHERE</code> clause that mixes <code>AND</code> and <code>OR</code>, always use parentheses. Even if you memorize the precedence rules, parentheses make your code instantly readable to your colleagues and future self, eliminating any ambiguity about your analytical intentions.</em></p>
-</div>
-</div>
+<!-- ::: {.callout-note title="Handling Missing Values in `SQL`"} -->
+<!-- Users of `R` are used to `NA` and functions like `is.na()`. `SQL` has a related but stricter concept: `NULL`, representing an unknown or missing value. The critical difference is that `NULL` cannot be compared using the standard `=` operator. A test like `dep_delay = NULL` does not evaluate to `TRUE` or `FALSE` — it evaluates to `UNKNOWN`, and rows where this happens are silently excluded from the result, with no error raised. To correctly test for missing values, `SQL` provides the dedicated keywords `IS NULL` and `IS NOT NULL`. Notice both the queries below and compare `num_missing` to `num_missing_wrong` — the second will return zero, which is a common and quiet source of bugs. -->
+<!-- ```{sql} -->
+<!-- --| connection: con_air -->
+<!-- -- flights with a missing (NULL) departure delay -->
+<!-- -- these are often cancelled or diverted flights with no recorded time -->
+<!-- SELECT * -->
+<!-- FROM flights -->
+<!-- WHERE dep_delay IS NULL; -->
+<!-- ``` -->
+<!-- ```{sql} -->
+<!-- --| connection: con_air -->
+<!-- -- this query looks like it should find the same rows, but it does not -->
+<!-- SELECT COUNT(*) AS num_missing_wrong -->
+<!-- FROM flights -->
+<!-- WHERE dep_delay = NULL; -->
+<!-- ``` -->
+<!-- ::: -->
 <!-- ::: {.callout-warning title="Operator Precedence Edge Case"} -->
 <!-- Logical operators in `SQL` evaluate in a strict order: `AND` is evaluated before `OR`. Consider the following query meant to find flights out of Appleton (ATW) going to Chicago (ORD) in 2013: -->
 <!-- ```{sql} -->
@@ -2848,14 +2578,19 @@ WHERE (`year` = 2013.0 AND ((`origin` = 'LAX' AND `dest` = 'BOS') OR (`origin` =
 <!-- ``` -->
 <!-- Because `AND` binds tighter, `SQL` interprets this as: "Find flights from ATW in 2013, `OR` find any flight going to ORD from any year and any origin." This will return millions of incorrect rows. We must always use parentheses to explicitly define our logic, just as we did in our LAX-BOS query earlier. -->
 <!-- ::: -->
-<p>Let us correctly aggregate data for flights out of Appleton.</p>
+</section>
+<section id="query-5" class="level3" data-number="2.4.5">
+<h3 data-number="2.4.5" class="anchored" data-anchor-id="query-5"><span class="header-section-number">2.4.5</span> query 5</h3>
+<p>Adding <code>GROUP BY year</code> counts the number of flights that operated on the ATW–ORD route per year.</p>
+<p><code>ORDER BY year</code> sorts the results chronologically.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- count the number of flights from Appleton (ATW) for each year</span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="dt">year</span>, <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> num_flights </span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights </span>
-<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> origin <span class="op">=</span> <span class="st">'ATW'</span></span>
-<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> <span class="dt">year</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- count the number of flights from Appleton (ATW) for each year</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="dt">year</span>, <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> num_flights</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> origin <span class="op">=</span> <span class="st">'ATW'</span> <span class="kw">AND</span> dest <span class="op">=</span> <span class="st">'ORD'</span></span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> <span class="dt">year</span></span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> <span class="dt">year</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>3 records</caption>
@@ -2868,29 +2603,30 @@ WHERE (`year` = 2013.0 AND ((`origin` = 'LAX' AND `dest` = 'BOS') OR (`origin` =
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">2013</td>
-<td style="text-align: right;">5096</td>
+<td style="text-align: right;">1838</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">2014</td>
-<td style="text-align: right;">2710</td>
+<td style="text-align: right;">1647</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">2015</td>
-<td style="text-align: right;">3108</td>
+<td style="text-align: right;">1570</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
-<p>We can group by multiple variables by separating them with commas.</p>
+<p>We can group by multiple variables by separating them with commas. Grouping by both <code>carrier</code> and <code>year</code> lets us see how many flights each airline operated on the ATW–ORD route per year.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- which carriers flew from Appleton (ATW) to Chicago (ORD)</span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- how many flights did they do per year</span></span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> carrier, <span class="dt">year</span>, <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> num_flights</span>
-<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights </span>
-<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> origin <span class="op">=</span> <span class="st">'ATW'</span> <span class="kw">AND</span> dest <span class="op">=</span> <span class="st">'ORD'</span></span>
-<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> carrier, <span class="dt">year</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- which carriers flew from Appleton (ATW) to Chicago (ORD)</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- how many flights did they do per year</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> carrier, <span class="dt">year</span>, <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> num_flights</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights </span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> origin <span class="op">=</span> <span class="st">'ATW'</span> <span class="kw">AND</span> dest <span class="op">=</span> <span class="st">'ORD'</span></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> carrier, <span class="dt">year</span></span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> carrier, <span class="dt">year</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>6 records</caption>
@@ -2936,15 +2672,20 @@ WHERE (`year` = 2013.0 AND ((`origin` = 'LAX' AND `dest` = 'BOS') OR (`origin` =
 </table>
 </div>
 </div>
+</section>
+<section id="query-6" class="level3" data-number="2.4.6">
+<h3 data-number="2.4.6" class="anchored" data-anchor-id="query-6"><span class="header-section-number">2.4.6</span> query 6</h3>
+<p><code>MAX(dep_time)</code> within each carrier group returns the latest recorded departure time for that carrier on the ATW–ORD route.</p>
+<p>Note that departure times in this table are stored as integers in <code>HHMM</code> format (e.g., 1435 = 2:35 PM).</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- for flights that flew from Appleton (ATW) to Chicago (ORD)</span></span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- what was the latest flight for each carrier</span></span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> carrier, <span class="fu">MAX</span>(dep_time) <span class="kw">AS</span> latest_dep_time </span>
-<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights </span>
-<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> origin <span class="op">=</span> <span class="st">'ATW'</span> <span class="kw">AND</span> dest <span class="op">=</span> <span class="st">'ORD'</span></span>
-<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> carrier</span>
-<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">1</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- for flights that flew from Appleton (ATW) to Chicago (ORD)</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- what was the latest flight for each carrier</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> carrier, <span class="fu">MAX</span>(dep_time) <span class="kw">AS</span> latest_dep_time </span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights </span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> origin <span class="op">=</span> <span class="st">'ATW'</span> <span class="kw">AND</span> dest <span class="op">=</span> <span class="st">'ORD'</span></span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> carrier</span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">1</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>1 records</caption>
@@ -2963,22 +2704,24 @@ WHERE (`year` = 2013.0 AND ((`origin` = 'LAX' AND `dest` = 'BOS') OR (`origin` =
 </table>
 </div>
 </div>
+</section>
+<section id="query-7" class="level3" data-number="2.4.7">
+<h3 data-number="2.4.7" class="anchored" data-anchor-id="query-7"><span class="header-section-number">2.4.7</span> query 7</h3>
 <p>Understanding the difference between <code>WHERE</code> and <code>HAVING</code> is one of the most important hurdles in learning <code>SQL</code>. Both act as filters, but they operate at different stages of the execution pipeline.</p>
 <p><code>WHERE</code> filters records in the original dataset before any grouping occurs. <code>HAVING</code> filters the results of our aggregations after the <code>GROUP BY</code> clause has executed.</p>
 <p>First, let us find the destination with the lowest average arrival delay from Appleton, using <code>WHERE</code> to filter the origin.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- for flights that flew from Appleton (ATW) </span></span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- which destination had the lowest average arrival delay time</span></span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> dest, <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> num_flights, <span class="fu">AVG</span>(arr_delay) <span class="kw">AS</span> avg_arr_delay</span>
-<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights </span>
-<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> origin <span class="op">=</span> <span class="st">'ATW'</span></span>
-<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> dest</span>
-<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> avg_arr_delay</span>
-<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">1</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- for flights that flew from Appleton (ATW) </span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- which destination had the lowest average arrival delay time</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> dest, <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> num_flights, <span class="fu">AVG</span>(arr_delay) <span class="kw">AS</span> avg_arr_delay</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights </span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> origin <span class="op">=</span> <span class="st">'ATW'</span></span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> dest</span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> avg_arr_delay;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
-<caption>1 records</caption>
+<caption>4 records</caption>
 <thead>
 <tr class="header">
 <th style="text-align: left;">dest</th>
@@ -2992,26 +2735,40 @@ WHERE (`year` = 2013.0 AND ((`origin` = 'LAX' AND `dest` = 'BOS') OR (`origin` =
 <td style="text-align: right;">2183</td>
 <td style="text-align: right;">-0.6949</td>
 </tr>
+<tr class="even">
+<td style="text-align: left;">MSP</td>
+<td style="text-align: right;">1920</td>
+<td style="text-align: right;">0.9250</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ATL</td>
+<td style="text-align: right;">1756</td>
+<td style="text-align: right;">6.5017</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ORD</td>
+<td style="text-align: right;">5055</td>
+<td style="text-align: right;">13.9937</td>
+</tr>
 </tbody>
 </table>
 </div>
 </div>
-<p>The result might show a destination with only one or two flights, heavily skewing the average. We want to restrict our analysis to robust routes—those with at least 2,000 flights. We cannot put <code>num_flights &gt;= 2000</code> in the <code>WHERE</code> clause because <code>num_flights</code> does not exist in the original table; it is an aggregated calculation. Therefore, we must use <code>HAVING</code>.</p>
+<p>Suppose we want to restrict our analysis to robust routes — say, those with at least 2,000 flights. We cannot put <code>num_flights &gt;= 2000</code> in the <code>WHERE</code> clause because <code>num_flights</code> does not exist in the original table; it is an aggregated calculation. Therefore, we must use <code>HAVING</code>.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- for flights that flew from Appleton (ATW) </span></span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- consider only destinations with at least 2000 flights from Appleton (ATW)</span></span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- which destination had the lowest average arrival delay time</span></span>
-<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> dest, <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> num_flights, <span class="fu">AVG</span>(arr_delay) <span class="kw">AS</span> avg_arr_delay</span>
-<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights </span>
-<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> origin <span class="op">=</span> <span class="st">'ATW'</span></span>
-<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> dest</span>
-<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a><span class="kw">HAVING</span> num_flights <span class="op">&gt;=</span> <span class="dv">2000</span></span>
-<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> avg_arr_delay</span>
-<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">1</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- for flights that flew from Appleton (ATW) </span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- consider only destinations with at least 2000 flights from Appleton (ATW)</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- which destination had the lowest average arrival delay time</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> dest, <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> num_flights, <span class="fu">AVG</span>(arr_delay) <span class="kw">AS</span> avg_arr_delay</span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights </span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> origin <span class="op">=</span> <span class="st">'ATW'</span></span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> dest</span>
+<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a><span class="kw">HAVING</span> num_flights <span class="op">&gt;=</span> <span class="dv">2000</span></span>
+<span id="cb44-10"><a href="#cb44-10" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> avg_arr_delay;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
-<caption>1 records</caption>
+<caption>2 records</caption>
 <thead>
 <tr class="header">
 <th style="text-align: left;">dest</th>
@@ -3025,10 +2782,89 @@ WHERE (`year` = 2013.0 AND ((`origin` = 'LAX' AND `dest` = 'BOS') OR (`origin` =
 <td style="text-align: right;">2183</td>
 <td style="text-align: right;">-0.6949</td>
 </tr>
+<tr class="even">
+<td style="text-align: left;">ORD</td>
+<td style="text-align: right;">5055</td>
+<td style="text-align: right;">13.9937</td>
+</tr>
 </tbody>
 </table>
 </div>
 </div>
+<p><code>HAVING</code> filters groups <strong>after</strong> aggregation, unlike <code>WHERE</code> which filters rows <strong>before</strong> aggregation.</p>
+</section>
+<section id="query-8" class="level3" data-number="2.4.8">
+<h3 data-number="2.4.8" class="anchored" data-anchor-id="query-8"><span class="header-section-number">2.4.8</span> query 8</h3>
+<p>We now have all the pieces to write a complete query using every clause introduced in this chapter. Notice how each clause does a distinct job, and how the order we write them in matches the order listed at the start of this section: we filter raw rows first (<code>WHERE</code>), then aggregate (<code>GROUP BY</code>), then filter the aggregated results (<code>HAVING</code>), then sort (<code>ORDER BY</code>), and finally restrict the output size (<code>LIMIT</code>). Try reading the query out loud, clause by clause — it should read almost like a sentence describing the question we are asking of the data.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- for flights out of Appleton (ATW) in 2013 or later</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- consider only destinations with at least 500 flights</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- find the 5 destinations with the highest average departure delay</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> dest,</span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>       <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> num_flights,</span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>       <span class="fu">AVG</span>(dep_delay) <span class="kw">AS</span> avg_dep_delay</span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> origin <span class="op">=</span> <span class="st">'ATW'</span> <span class="kw">AND</span> <span class="dt">year</span> <span class="op">&gt;=</span> <span class="dv">2013</span></span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> dest</span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a><span class="kw">HAVING</span> num_flights <span class="op">&gt;=</span> <span class="dv">500</span></span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> avg_dep_delay <span class="kw">DESC</span></span>
+<span id="cb45-13"><a href="#cb45-13" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">5</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>4 records</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">dest</th>
+<th style="text-align: right;">num_flights</th>
+<th style="text-align: right;">avg_dep_delay</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">ORD</td>
+<td style="text-align: right;">5055</td>
+<td style="text-align: right;">11.7658</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ATL</td>
+<td style="text-align: right;">1756</td>
+<td style="text-align: right;">9.4129</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DTW</td>
+<td style="text-align: right;">2183</td>
+<td style="text-align: right;">3.5456</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MSP</td>
+<td style="text-align: right;">1920</td>
+<td style="text-align: right;">2.2849</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Which approach to use?">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Which approach to use?
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Having now seen all three approaches to writing <code>SQL</code> from within <code>R</code>, a natural question is: which one should we actually use? There is no single right answer, but the following rough guide is a useful starting point:</p>
+<ul>
+<li><p><strong>Use <code>dbplyr</code> (Part 1)</strong> when your query is a fairly standard <code>dplyr</code> pipeline — filtering, grouping, summarizing — and you want your code to stay readable and consistent with the rest of a <code>tidyverse</code>-based analysis. This is the best default for most exploratory work.</p></li>
+<li><p><strong>Use <code>DBI::dbGetQuery()</code> (Part 2)</strong> when you need a <code>SQL</code> feature <code>dbplyr</code> cannot translate (such as window functions), but the query is short enough to comfortably live as a string inside an <code>R</code> script or function.</p></li>
+<li><p><strong>Use native <code>{sql}</code> code chunks (Part 3)</strong> when writing long, complex, or highly <code>SQL</code>-specific queries — window functions, subqueries, or multi-table joins — where syntax highlighting and formatting readability matter, or when you want a query that could be copy-pasted directly into a standalone database client.</p></li>
+</ul>
+<p>In practice, many real analyses mix all three approaches within the same project, choosing whichever tool best fits the query at hand.</p>
+</div>
+</div>
+</section>
 </section>
 <section id="calling-sql-generated-datasets-into-r-for-data-viz" class="level2" data-number="2.5">
 <h2 data-number="2.5" class="anchored" data-anchor-id="calling-sql-generated-datasets-into-r-for-data-viz"><span class="header-section-number">2.5</span> calling <code>SQL</code> generated datasets into R for data viz</h2>
@@ -3036,32 +2872,32 @@ WHERE (`year` = 2013.0 AND ((`origin` = 'LAX' AND `dest` = 'BOS') OR (`origin` =
 <section id="method-1-using-dbidbgetquery" class="level3" data-number="2.5.1">
 <h3 data-number="2.5.1" class="anchored" data-anchor-id="method-1-using-dbidbgetquery"><span class="header-section-number">2.5.1</span> Method 1: using <code>DBI::dbGetQuery()</code></h3>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>df1 <span class="ot">&lt;-</span> DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(con_air, <span class="st">"SELECT * FROM flights LIMIT 10"</span>)</span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="co"># always check the number of rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>df1 <span class="ot">&lt;-</span> DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(con_air, <span class="st">"SELECT * FROM flights LIMIT 10"</span>)</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a><span class="co"># always check the number of rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="method-2-using-dbplyr-with-raw-sql" class="level3" data-number="2.5.2">
 <h3 data-number="2.5.2" class="anchored" data-anchor-id="method-2-using-dbplyr-with-raw-sql"><span class="header-section-number">2.5.2</span> Method 2: using <code>dbplyr</code> with raw <code>SQL</code></h3>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>df2 <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">tbl</span>(con_air, dplyr<span class="sc">::</span><span class="fu">sql</span>(<span class="st">"SELECT * FROM flights LIMIT 10"</span>)) <span class="sc">|&gt;</span> dplyr<span class="sc">::</span><span class="fu">collect</span>()</span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="co"># doesn't need a semicolon</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>df2 <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">tbl</span>(con_air, dplyr<span class="sc">::</span><span class="fu">sql</span>(<span class="st">"SELECT * FROM flights LIMIT 10"</span>)) <span class="sc">|&gt;</span> dplyr<span class="sc">::</span><span class="fu">collect</span>()</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a><span class="co"># doesn't need a semicolon</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="method-3-quarto-chunk-options" class="level3" data-number="2.5.3">
 <h3 data-number="2.5.3" class="anchored" data-anchor-id="method-3-quarto-chunk-options"><span class="header-section-number">2.5.3</span> Method 3: Quarto chunk options</h3>
 <p>We can write a native <code>SQL</code> chunk and use the <code>--| output.var: "df"</code> code chunk option to assign the result to an object in our <code>R</code> environment.</p>
 <div class="cell" data-output.var="df3">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> flights <span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> flights <span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>All three methods are valid. We select the one that best fits our workflow and the complexity of the query we need to execute.</p>
 <p>Finally, always remember to disconnect your connection to the server.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># terminate the SQL connection</span></span>
-<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbDisconnect</span>(con_air, <span class="at">shutdown =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># terminate the SQL connection</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbDisconnect</span>(con_air, <span class="at">shutdown =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 
 
