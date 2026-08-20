@@ -32,7 +32,7 @@ We initialize this connection using the `mdsr` package, which provides a conveni
 Here, `con_air` is the connection to the `airlines` database on the `scidb` server located on Amazon Web Services. Check out more details on the help page (`?mdsr::dbConnect_scidb`).
 
 ```{r}
-# access airlines database
+# connecting to the airlines database
 
 con_air <- mdsr::dbConnect_scidb("airlines")
 
@@ -40,8 +40,8 @@ con_air <- mdsr::dbConnect_scidb("airlines")
 
 ```
 
-::: {.callout-tip title="The Client-Server Analogy"}
-Think of the client-server model like a restaurant. 
+::: {.callout-note title="The Client-Server Analogy"}
+Think of the **client-server** model like a restaurant. 
 We (the client) sit at a table and look at the menu. We do not go into the kitchen to cook the food ourself. Instead, we send our order (the query) via a waiter (the connection) to the kitchen (the server). The kitchen processes the heavy lifting and sends back only our specific meal (the results).
 :::
 
@@ -63,7 +63,9 @@ con_wai <- DBI::dbConnect(
 
 ```
 
-
+::: {.callout-warning title="Password Security"}
+It is not ideal and hence, not recommended, to share passwords. The code chunk above is shown only for teaching purposes. 
+:::
 
 ## database tables and accessing them
 
@@ -72,7 +74,7 @@ Once a connection is established, the first step is typically reconnaissance: we
 We can achieve this using `R` syntax via the `DBI` package:
 
 ```{r}
-# lists tables in the database
+# lists tables in the airlines database
 
 DBI::dbListTables(con_air)   
 
@@ -96,17 +98,26 @@ Notice that we wrote SHOW TABLES in all capital letters and ended the statement 
 :::
 
 
-Knowing the tables exist is not enough; we must establish a reference to a specific table to query it. We do this using `dplyr::tbl()`.
+Knowing the tables exist is not enough; we must establish a reference to a specific table to query it. We do this using `dplyr::tbl()`. This creates a lazy reference to a remote database table without downloading it. Operations on this object are translated to `SQL` and executed on the server only when results are actually needed.
 
 Here, we query the `flights` table from the established connection to the `airlines` database.
 
 
 ```{r}
-# access flights table from the airlines database
+# reference to flights table from the airlines database
 
 flights <- dplyr::tbl(con_air, "flights")
 
 ```
+
+::: {.callout-note title="Object Distinctions"}
+It's easy to conflate the objects we have created thus far. Notice the distinction between `con_air` (the connection object), `airlines` (the database), and `flights` (the table reference). The following hierarchy would be helpful
+
+$$\text{server} \rightarrow \text{database} \rightarrow \text{table} \rightarrow \text{table reference}$$
+:::
+
+
+Notice the output of `class(flights)`. It is not a standard `data.frame` or `tbl_df`. It is a `tbl_dbi` and `tbl_sql`. This distinction is profound because it introduces the concept of lazy evaluation. 
 
 ```{r}
 # inspect the object type
@@ -115,7 +126,8 @@ class(flights)
 
 ```
 
-Notice the output of `class(flights)`. It is not a standard `data.frame` or `tbl_df`. It is a `tbl_dbi` and `tbl_sql`. This distinction is profound because it introduces the concept of lazy evaluation. 
+
+When we print the `flights` object below, it provides a quick glimpse of the columns and the first few rows. However, we will notice it says `??` for the total number of rows. This is because the data is not actually in R's memory. `R` has merely established a pointer to the table on the server. Because counting tens of millions of rows takes computational time, the database engine skips that step until explicitly commanded otherwise. It is **"lazy"**—it does as little work as possible.
 
 
 ```{r}
@@ -125,9 +137,23 @@ flights
 
 ```
 
-When we print the `flights` object, it provides a quick glimpse of the columns and the first few rows. However, we will notice it says `??` for the total number of rows. This is because the data is not actually in R's memory. `R` has merely established a pointer to the table on the server. Because counting tens of millions of rows takes computational time, the database engine skips that step until explicitly commanded otherwise. It is **"lazy"**—it does as little work as possible.
 
-To understand the architecture of the table without pulling data, we can use the `DESCRIBE` command in `SQL`.
+::: {.callout-note title="Lazy tbl"}
+Notice that typical exploratory functions such as `str` and `glimpse` would work differently with the `flights` object compared to datasets loaded in the local session memory.
+
+```{r}
+str(flights)
+```
+```{r}
+glimpse(flights)  # notice the ?? on the number of rows
+```
+:::
+
+
+To understand the architecture of the table without pulling data, we can use the `DESCRIBE` command in `SQL`. This returns column/field names, data types, and constraints for a table. This is a recommended first step before working with the table.
+
+
+
 
 ```{sql}
 --| connection: con_air
@@ -141,10 +167,10 @@ This output is conceptually similar to R's `glimpse()` function, but it exposes 
 Remember, earlier we were trying to figure out if it would be more efficient to store student names versus their IDs!
 
 
-To fully appreciate the power of lazy evaluation, we can compare the memory footprint of a database pointer versus a materialized object in R. Let us create a reference to the `carriers` table.
+To fully appreciate the power of lazy evaluation, we can compare the memory footprint of a database pointer versus a materialized in-memory object in `R`. Let us create a reference to the `carriers` table.
 
 ```{r}
-# access carriers table from the airlines database
+# reference to carriers table from the airlines database
 
 carriers <- dplyr::tbl(con_air, "carriers")
 
@@ -185,7 +211,7 @@ carriers_df <- carriers |>  dplyr::collect()
 Let's check the memory size now:
 
 ```{r}
-# carriers lives in R
+# carriers lives in memory in R as carriers_df
 
 carriers_df |>
   utils::object.size() |>
@@ -197,6 +223,18 @@ The materialized data frame is significantly larger because the actual data now 
 
 ::: {.callout-warning title="The Danger of Collect"}
 We should never run `collect()` on a massive, unaggregated table like `flights`. That table contains hundreds of millions of rows. If we attempt to `collect()` the entire table, we will exhaust our machine's RAM, and our `R` session will crash. The proper workflow is to use `dbplyr` or `SQL` to filter and summarize the data on the remote server, and only `collect()` the finalized, summarized results into R.
+
+Another safer alternative (if needed) is
+
+```{r}
+# flights_df lives in memory in R
+
+flights_df <- flights |> 
+  head(5) |> 
+  collect()
+
+```
+
 :::
 
 

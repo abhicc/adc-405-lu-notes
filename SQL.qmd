@@ -72,7 +72,7 @@ In the next four chapters, we will use both `R` and `SQL` code chunks. Shown bel
 
 ```{{r}}
 
-# your R code
+# your R code below
 
 ```
 
@@ -81,9 +81,9 @@ In the next four chapters, we will use both `R` and `SQL` code chunks. Shown bel
 ::: {.callout-tip title="SQL Code Chunk"}
 
 ```{{sql}}
---| connection: connection_to_your_server
+#| connection: connection_to_your_server
 
--- your SQL code
+-- your SQL code below
 
 ```
 
