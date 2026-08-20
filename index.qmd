@@ -2,7 +2,7 @@
 
 These notes have been developed for the CMSC/STAT 405: Advanced Data Computing course at [Lawrence University](https://www.lawrence.edu/), Appleton, Wisconsin. This course is intended for upper-level undergraduate students who have previously taken a course on R-programming (that covers the `tidyverse` ecosystem, webscraping, and Shiny apps).
 
-We use R, and access it through Posit Cloud, as our primary computing environment, except for writing SQL code. These notes have been heavily adopted and adapted from the following excellent open-source resources: 
+We use R (except while writing SQL code), and access it through Posit Cloud, as our primary computing environment. These notes have been heavily adopted and adapted from the following excellent open-source resources: 
 
 * [R for Data Science (2e)](https://r4ds.hadley.nz/) by Hadley Wickham, Mine Çetinkaya-Rundel, and Garrett Grolemund.
 * [Advanced R](https://adv-r.hadley.nz/index.html) by Hadley Wickham .

@@ -1,5 +1,5 @@
 ---
-title: "Writing SQL queries"
+title: "Writing SQL Queries"
 execute: 
   eval: true
   warning: false
@@ -130,7 +130,7 @@ la_bos
 ```
 
 
-::: {.callout-warning title="Where `dbplyr` translation breaks down"}
+::: {.callout-warning title="Where `dbplyr` Translation Breaks Down"}
 
 Notice the code below. Depending on the database backend, this either fails outright or produces a warning, because `cumsum()` requires a `SQL` **window function**, and not every `dplyr` function has a clean, universal `SQL` equivalent — especially once we leave basic aggregation and move into ordered, row-by-row calculations. This is precisely the kind of situation where dropping down to raw `SQL` becomes necessary rather than a stylistic choice. In the sections that follow, we introduce two ways to do exactly that.
 
@@ -245,7 +245,7 @@ ORDER BY num_flights;
 ```
 
 
-::: {.callout-note title="Written order of `SQL` clauses"}
+::: {.callout-note title="Written Order of `SQL` Clauses"}
 
 **Queries** in `SQL` start with the **SELECT** keyword and consist of several **clauses**, which have to be written in this order:
 
@@ -378,7 +378,7 @@ WHERE origin = 'ATW' AND dest = 'ORD' AND year = 2013;
 
 ```
 
-::: {.callout-note title="Logical operators `AND` and `OR`"}
+::: {.callout-note title="Logical Operators `AND` and `OR`"}
 
 Logical operators in `SQL` evaluate in a strict order: `AND` is evaluated before `OR`.
 
@@ -655,7 +655,7 @@ LIMIT 5;
 ```
 
 
-::: {.callout-note title="Which approach to use?"}
+::: {.callout-note title="Which Approach to Use?"}
 
 Having now seen all three approaches to writing `SQL` from within `R`, a natural question is: which one should we actually use? There is no single right answer, but the following rough guide is a useful starting point:
 

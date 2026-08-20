@@ -1,14 +1,31 @@
 ---
 title: "Creating Databases"
 execute: 
-  eval: false
+  eval: true
   warning: false
   message: false
-  cache: true
+  cache: false
 ---
+
+```{r}
+#| include: false
+#| warning: false
+
+# Check if the persistent database file exists from a previous render
+if (file.exists("snl_db")) {
+  # Delete the old file to ensure a fresh start
+  unlink("snl_db")
+}
+```
+
+In our previous chapters, we operated strictly as consumers of data. We connected to a remote, read-only database and executed queries to extract and aggregate information. However, complete data science workflows frequently require us to be data architects. We must ingest raw, unstructured data from flat files, define a rigid structure for it, and build our own relational databases from scratch.
+
+In this chapter, we transition from querying existing systems to architecting our own. To do this, we will use `duckdb`, an in-process `SQL` database management system. Unlike traditional client-server databases (like `MySQL` or `PostgreSQL`) that require external servers and complex authentication, `DuckDB` runs entirely within our local `R` environment. It is highly optimized for analytical queries on our local machines, bridging the gap between massive server-side databases and local data frames.
 
 
 ## load packages and connect to database server
+
+Let us load our required packages. Notice the addition of the `duckdb` package alongside our standard database interface tools.
 
 ```{r}
 #| warning: false
@@ -23,14 +40,20 @@ library(duckdb)
 ```
 
 
-As an example, we will consider the Saturday Night Live datasets available on the **snldb** GitHub [repo](https://github.com/hhllcks/snldb). Data is scraped from [SNL archives](http://www.snlarchives.net) and http://www.imdb.com/title/tt0072562 by Hendrik Hilleckes and Colin Morris.
+To contextualize our database creation process, we will consider the Saturday Night Live (SNL) datasets available on the **snldb** GitHub [repo](https://github.com/hhllcks/snldb). Data is scraped from [SNL archives](http://www.snlarchives.net) and [IMDb](http://www.imdb.com/title/tt0072562) by Hendrik Hilleckes and Colin Morris.
+
+Our first step is to initialize a blank database locally. Rather than pointing to a remote server, we point `R` to a local directory on our hard drive.
 
 ```{r}
+# initialize an empty DuckDB database and establish a connection
 
 con_snl <- DBI::dbConnect(duckdb::duckdb(), dbdir = "snl_db")
 
 ```
 
+When we run this code, `duckdb` creates a physical file named `snl_db` in our current working directory. Our object, `con_snl`, acts as the connection to this newly minted, empty database.
+
+We can verify that the database is currently empty by running a standard `SQL` command to show all tables:
 
 ```{sql connection="con_snl"}
 SHOW TABLES;
@@ -38,28 +61,43 @@ SHOW TABLES;
 
 
 
-## accessing data (csv files) from GitHub (or, elsewhere)
+## accessing data (`csv` files) from GitHub (or, elsewhere)
 
-Notice that there are eleven **.csv** files available in the **output** folder. Let's look at the **casts** dataset in R, so that we understand the data we want to load into the database.
+Before we can build a table in `SQL`, we must thoroughly understand the shape and nature of the raw data we intend to import. The SNL repository contains several `.csv` files in the **output** directory. Let us examine the `casts` dataset.
+
+We will temporarily read it into `R`'s working memory (see the `Environment` pane) using `readr::read_csv()` strictly for exploratory purposes.
+
 
 ```{r}
 # read in the data
 
-casts <- readr::read_csv("")
+casts <- readr::read_csv("https://raw.githubusercontent.com/hhllcks/snldb/refs/heads/master/output/casts.csv")
 
 ```
 
 
+We must inspect the data to identify variable types and the presence of missing values (`NA`s), as these details dictate how we will construct our `SQL` schema.
+
 ```{r}
+
 glimpse(casts)
 
 ```
 
 
+The `glimpse()` output reveals how `R` interprets the data: strings (`chr`), logicals (`lgl`), and numeric values (`dbl`). We also clearly see `NA` values, which we will need to handle explicitly in `SQL`.
+
+
 ```{r}
+
 summary(casts)
 
 ```
+
+
+Our summary statistics confirm the presence of missing values. Furthermore, we can deduce that `first_epid` and `last_epid` represent chronological identifiers (episode IDs) rather than standard numeric measurements.
+
+Because `SQL` databases generally ingest data from local flat files rather than live URLs, our final preparatory step is to save this dataset locally as a `.csv`.
 
 
 ```{r}
@@ -73,21 +111,31 @@ write_csv(casts, "casts.csv")
 
 ## data types in SQL
 
-Consult [data types](https://dev.mysql.com/doc/refman/8.0/en/data-types.html) for details.
+When `R` imports a `.csv` file, it uses dynamic typing—it scans the first few thousand rows and guesses whether a column is numeric, character, or logical.
+
+`SQL`, however, requires strict, explicit typing. When we create a database table, we must declare exactly what kind of data each column will hold. This rigorous requirement prevents data corruption (e.g., accidentally inserting the string "five" into a numeric column) and optimizes storage.
+
+Common `SQL` data types include `VARCHAR` (variable-length string), `INTEGER` (whole numbers), `SMALLINT` (smaller whole numbers to save space), `DOUBLE` (decimals), and `BOOLEAN` (True/False). 
+
+Before proceeding, we highly recommend consulting the official [MySQL Data Types Documentation](https://dev.mysql.com/doc/refman/8.0/en/data-types.html) for a comprehensive overview.
 
 
 
 ## importing data
 
-Once the database is set up, you will be ready to import .csv files into the database as tables. Importing .csv files as tables requires a series of steps:
+With our database set up, `.csv` file saved locally, and our data types mapped out, we are ready to build our database table. Importing flat files into a relational database requires a sequential, four-step pipeline:
 
 * a **USE** statement that ensures we are in the right database.
+
 * a series of **DROP TABLE** statements that drop any old tables with the same names as the ones we are going to create.
+
 * a series of **CREATE TABLE** statements that specify the table structures and field types.
-* a series of **COPY** (or **LOAD DATA** for MySQL) statements that read the data from the .csv files into the appropriate tables.
+
+* a series of **COPY** (or **LOAD DATA** for `MySQL`) statements that read the data from the `.csv` files into the appropriate tables.
 
 
 ```{sql connection="con_snl"}
+-- step 1: ensure we are in the correct database 
 
 USE snl_db;
 
@@ -95,13 +143,17 @@ USE snl_db;
 
 
 ```{sql connection="con_snl"}
+-- step 2: Clear any existing table to ensure reproducibility
 
 DROP TABLE IF EXISTS casts;
 
 ```
 
 
+Now we define our schema. For every column, we specify the name, the exact data type, whether it is allowed to be empty (`NOT NULL`), and what the default value should be if a user forgets to provide data. Finally, we define a **Primary Key** — a unique identifier for each row.
+
 ```{sql connection="con_snl"}
+-- step 3: define the strict schema
 
 CREATE TABLE casts (
   aid VARCHAR(255) NOT NULL DEFAULT ' ',
@@ -118,7 +170,15 @@ CREATE TABLE casts (
 ```
 
 
+::: {.callout-tip title="Composite Primary Keys"}
+Notice that our `PRIMARY KEY` is composed of two columns: (`sid`, `aid`). This is known as a **composite key**. It means that while a single actor (`aid`) might appear multiple times in the table, and a single season (`sid`) contains multiple actors, the combination of a specific actor in a specific season will only ever appear exactly once.
+:::
+
+
+With our empty structural shell created, we instruct the database engine to ingest the data from our local `.csv` file.
+
 ```{sql connection="con_snl"}
+-- step 4: load the data from the flat csv file
 
 COPY casts FROM 'casts.csv' (FORMAT CSV, HEADER, NULL 'NA');
 
@@ -128,34 +188,51 @@ COPY casts FROM 'casts.csv' (FORMAT CSV, HEADER, NULL 'NA');
 
 ## checks
 
+It is vital to audit our work to ensure the data was ingested correctly and the schema holds up.
+
 ```{sql connection="con_snl"}
+-- verify the database exists
+
 SHOW DATABASES;
+
 ```
 
 
 ```{sql connection="con_snl"}
+-- verify our table exists
+
 SHOW TABLES;
+
 ```
 
 
 ```{sql connection="con_snl"}
+-- review the strict schema we defined
+
 DESCRIBE casts;
 ```
 
 
 ```{sql connection="con_snl"}
+-- peek at the ingested data
+
 SELECT * FROM casts LIMIT 10;
+
 ```
 
 
 
 
-## shortcut (not accepted for Project 2)
+## shortcut - a fast (but fragile) route
+
+Many `R` packages, including `duckdb`, provide convenient wrapper functions that automate the entire pipeline we just built. These functions read the `.csv` file, guess the schema (just like `R` does), construct the `CREATE TABLE` statement silently, and ingest the data in a single line of code.
+
+Let us demonstrate this shortcut using the `episodes.csv` file.
 
 ```{r}
 # read in the data
 
-episodes <- readr::read_csv("")
+episodes <- readr::read_csv("https://raw.githubusercontent.com/hhllcks/snldb/refs/heads/master/output/episodes.csv")
 
 glimpse(episodes)
 
@@ -170,12 +247,16 @@ write_csv(episodes, "episodes.csv")
 ```
 
 
+Now, we can use the `duckdb_read_csv()` function to bypass raw `SQL` entirely:
+
 ```{r}
 
-duckdb_read_csv(con = con_snl, name = "episodes", files = "episodes.csv")
+duckdb::duckdb_read_csv(con = con_snl, name = "episodes", files = "episodes.csv")
 
 ```
 
+
+We can verify that it worked using `SQL`: 
 
 ```{sql connection="con_snl"}
 SHOW TABLES;
@@ -192,7 +273,17 @@ SELECT * FROM episodes LIMIT 10;
 ```
 
 
+::: {.callout-warning title="A Fragile Shortcut"}
+While functions like `duckdb_read_csv()` are incredibly useful for rapid prototyping, they are fragile. By allowing the software to guess the schema, we forfeit control over our data architecture. A single malformed string deep in a numeric column could cause the wrapper function to declare the entire column as text, ruining downstream analysis.
 
+In rigorous data engineering contexts, we must demonstrate mastery over data integrity by explicitly writing `CREATE TABLE` schemas. We must dictate the rules, rather than relying on an algorithm to guess them.
+
+:::
+
+
+## terminate connection
+
+As always, we conclude by cleanly severing our connection to the database.
 
 ```{r}
 # terminate the SQL connection

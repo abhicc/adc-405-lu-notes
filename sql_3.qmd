@@ -254,7 +254,7 @@ LIMIT 10;
 ::: {.callout-warning title="Union Edge Cases"}
 When using `UNION`, we must be aware of two strict database rules:
 
-* **Column Matching**: Unlike `R`'s `bind_rows()`, which politely aligns columns by their names and fills in NAs where they don't match, `SQL` `UNION` does not check column names. It blindly stacks the tables based on the number of columns and their data types. If query A returns a string in column 1, and query B returns an integer in column 1, the query will fail.
+* **Column Matching**: Unlike `R`'s `bind_rows()`, which politely aligns columns by their names and fills in `NA`s where they don't match, `SQL` `UNION` does not check column names. It blindly stacks the tables based on the number of columns and their data types. If query A returns a string in column 1, and query B returns an integer in column 1, the query will fail.
 
 * **Deduplication**: By default, `UNION` removes exact duplicate rows from the final result set. Searching for and removing duplicates is computationally expensive. If we know our datasets are mutually exclusive (as they are above) or if we want to retain duplicates, we should use `UNION ALL`, which simply appends the rows and executes much faster.
 

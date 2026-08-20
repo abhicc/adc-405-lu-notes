@@ -138,7 +138,7 @@ flights
 ```
 
 
-::: {.callout-note title="Lazy tbl"}
+::: {.callout-note title="Lazy `tbl`"}
 Notice that typical exploratory functions such as `str` and `glimpse` would work differently with the `flights` object compared to datasets loaded in the local session memory.
 
 ```{r}
@@ -221,7 +221,7 @@ carriers_df |>
 
 The materialized data frame is significantly larger because the actual data now resides in our computer's RAM.
 
-::: {.callout-warning title="The Danger of Collect"}
+::: {.callout-warning title="The Danger of `collect()`"}
 We should never run `collect()` on a massive, unaggregated table like `flights`. That table contains hundreds of millions of rows. If we attempt to `collect()` the entire table, we will exhaust our machine's RAM, and our `R` session will crash. The proper workflow is to use `dbplyr` or `SQL` to filter and summarize the data on the remote server, and only `collect()` the finalized, summarized results into R.
 
 Another safer alternative (if needed) is
