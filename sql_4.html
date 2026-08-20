@@ -174,7 +174,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./sql_2.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Writing SQL queries</span></span></a>
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Writing SQL Queries</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -282,11 +282,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#load-packages-and-connect-to-database-server" id="toc-load-packages-and-connect-to-database-server" class="nav-link active" data-scroll-target="#load-packages-and-connect-to-database-server"><span class="header-section-number">4.1</span> load packages and connect to database server</a></li>
-  <li><a href="#accessing-data-csv-files-from-github-or-elsewhere" id="toc-accessing-data-csv-files-from-github-or-elsewhere" class="nav-link" data-scroll-target="#accessing-data-csv-files-from-github-or-elsewhere"><span class="header-section-number">4.2</span> accessing data (csv files) from GitHub (or, elsewhere)</a></li>
+  <li><a href="#accessing-data-csv-files-from-github-or-elsewhere" id="toc-accessing-data-csv-files-from-github-or-elsewhere" class="nav-link" data-scroll-target="#accessing-data-csv-files-from-github-or-elsewhere"><span class="header-section-number">4.2</span> accessing data (<code>csv</code> files) from GitHub (or, elsewhere)</a></li>
   <li><a href="#data-types-in-sql" id="toc-data-types-in-sql" class="nav-link" data-scroll-target="#data-types-in-sql"><span class="header-section-number">4.3</span> data types in SQL</a></li>
   <li><a href="#importing-data" id="toc-importing-data" class="nav-link" data-scroll-target="#importing-data"><span class="header-section-number">4.4</span> importing data</a></li>
   <li><a href="#checks" id="toc-checks" class="nav-link" data-scroll-target="#checks"><span class="header-section-number">4.5</span> checks</a></li>
-  <li><a href="#shortcut-not-accepted-for-project-2" id="toc-shortcut-not-accepted-for-project-2" class="nav-link" data-scroll-target="#shortcut-not-accepted-for-project-2"><span class="header-section-number">4.6</span> shortcut (not accepted for Project 2)</a></li>
+  <li><a href="#shortcut---a-fast-but-fragile-route" id="toc-shortcut---a-fast-but-fragile-route" class="nav-link" data-scroll-target="#shortcut---a-fast-but-fragile-route"><span class="header-section-number">4.6</span> shortcut - a fast (but fragile) route</a></li>
+  <li><a href="#terminate-connection" id="toc-terminate-connection" class="nav-link" data-scroll-target="#terminate-connection"><span class="header-section-number">4.7</span> terminate connection</a></li>
   </ul>
 </nav>
     </div>
@@ -312,8 +313,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
+<p>In our previous chapters, we operated strictly as consumers of data. We connected to a remote, read-only database and executed queries to extract and aggregate information. However, complete data science workflows frequently require us to be data architects. We must ingest raw, unstructured data from flat files, define a rigid structure for it, and build our own relational databases from scratch.</p>
+<p>In this chapter, we transition from querying existing systems to architecting our own. To do this, we will use <code>duckdb</code>, an in-process <code>SQL</code> database management system. Unlike traditional client-server databases (like <code>MySQL</code> or <code>PostgreSQL</code>) that require external servers and complex authentication, <code>DuckDB</code> runs entirely within our local <code>R</code> environment. It is highly optimized for analytical queries on our local machines, bridging the gap between massive server-side databases and local data frames.</p>
 <section id="load-packages-and-connect-to-database-server" class="level2" data-number="4.1">
 <h2 data-number="4.1" class="anchored" data-anchor-id="load-packages-and-connect-to-database-server"><span class="header-section-number">4.1</span> load packages and connect to database server</h2>
+<p>Let us load our required packages. Notice the addition of the <code>duckdb</code> package alongside our standard database interface tools.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mdsr)</span>
@@ -322,119 +326,614 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dbplyr)</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(duckdb)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>As an example, we will consider the Saturday Night Live datasets available on the <strong>snldb</strong> GitHub <a href="https://github.com/hhllcks/snldb">repo</a>. Data is scraped from <a href="http://www.snlarchives.net">SNL archives</a> and http://www.imdb.com/title/tt0072562 by Hendrik Hilleckes and Colin Morris.</p>
+<p>To contextualize our database creation process, we will consider the Saturday Night Live (SNL) datasets available on the <strong>snldb</strong> GitHub <a href="https://github.com/hhllcks/snldb">repo</a>. Data is scraped from <a href="http://www.snlarchives.net">SNL archives</a> and <a href="http://www.imdb.com/title/tt0072562">IMDb</a> by Hendrik Hilleckes and Colin Morris.</p>
+<p>Our first step is to initialize a blank database locally. Rather than pointing to a remote server, we point <code>R</code> to a local directory on our hard drive.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>con_snl <span class="ot">&lt;-</span> DBI<span class="sc">::</span><span class="fu">dbConnect</span>(duckdb<span class="sc">::</span><span class="fu">duckdb</span>(), <span class="at">dbdir =</span> <span class="st">"snl_db"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># initialize an empty DuckDB database and establish a connection</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>con_snl <span class="ot">&lt;-</span> DBI<span class="sc">::</span><span class="fu">dbConnect</span>(duckdb<span class="sc">::</span><span class="fu">duckdb</span>(), <span class="at">dbdir =</span> <span class="st">"snl_db"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+<p>When we run this code, <code>duckdb</code> creates a physical file named <code>snl_db</code> in our current working directory. Our object, <code>con_snl</code>, acts as the connection to this newly minted, empty database.</p>
+<p>We can verify that the database is currently empty by running a standard <code>SQL</code> command to show all tables:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>SHOW <span class="kw">TABLES</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top">
+<caption>0 records</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">name</th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+</div>
 </div>
 </section>
 <section id="accessing-data-csv-files-from-github-or-elsewhere" class="level2" data-number="4.2">
-<h2 data-number="4.2" class="anchored" data-anchor-id="accessing-data-csv-files-from-github-or-elsewhere"><span class="header-section-number">4.2</span> accessing data (csv files) from GitHub (or, elsewhere)</h2>
-<p>Notice that there are eleven <strong>.csv</strong> files available in the <strong>output</strong> folder. Let’s look at the <strong>casts</strong> dataset in R, so that we understand the data we want to load into the database.</p>
+<h2 data-number="4.2" class="anchored" data-anchor-id="accessing-data-csv-files-from-github-or-elsewhere"><span class="header-section-number">4.2</span> accessing data (<code>csv</code> files) from GitHub (or, elsewhere)</h2>
+<p>Before we can build a table in <code>SQL</code>, we must thoroughly understand the shape and nature of the raw data we intend to import. The SNL repository contains several <code>.csv</code> files in the <strong>output</strong> directory. Let us examine the <code>casts</code> dataset.</p>
+<p>We will temporarily read it into <code>R</code>’s working memory (see the <code>Environment</code> pane) using <code>readr::read_csv()</code> strictly for exploratory purposes.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># read in the data</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>casts <span class="ot">&lt;-</span> readr<span class="sc">::</span><span class="fu">read_csv</span>(<span class="st">""</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>casts <span class="ot">&lt;-</span> readr<span class="sc">::</span><span class="fu">read_csv</span>(<span class="st">"https://raw.githubusercontent.com/hhllcks/snldb/refs/heads/master/output/casts.csv"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+<p>We must inspect the data to identify variable types and the presence of missing values (<code>NA</code>s), as these details dictate how we will construct our <code>SQL</code> schema.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(casts)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 614
+Columns: 8
+$ aid             &lt;chr&gt; "A. Whitney Brown", "A. Whitney Brown", "A. Whitney Br…
+$ sid             &lt;dbl&gt; 11, 12, 13, 14, 15, 16, 5, 39, 40, 41, 42, 45, 46, 21,…
+$ featured        &lt;lgl&gt; TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, …
+$ first_epid      &lt;dbl&gt; 19860222, NA, NA, NA, NA, NA, 19800409, 20140118, NA, …
+$ last_epid       &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
+$ update_anchor   &lt;lgl&gt; FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE…
+$ n_episodes      &lt;dbl&gt; 8, 20, 13, 20, 20, 20, 5, 11, 21, 21, 21, 18, 17, 20, …
+$ season_fraction &lt;dbl&gt; 0.4444444, 1.0000000, 1.0000000, 1.0000000, 1.0000000,…</code></pre>
 </div>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(casts)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+<p>The <code>glimpse()</code> output reveals how <code>R</code> interprets the data: strings (<code>chr</code>), logicals (<code>lgl</code>), and numeric values (<code>dbl</code>). We also clearly see <code>NA</code> values, which we will need to handle explicitly in <code>SQL</code>.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># save the dataset as a .csv file on your (local) computer</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(casts, <span class="st">"casts.csv"</span>)   </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(casts)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        aid           sid         featured         first_epid      
+ Length   :614   Min.   : 1.00   Mode :logical   Min.   :19770115  
+ N.unique :156   1st Qu.:15.00   FALSE:451       1st Qu.:19801215  
+ N.blank  :  0   Median :26.00   TRUE :163       Median :19901110  
+ Min.nchar:  8   Mean   :25.47                   Mean   :19909634  
+ Max.nchar: 20   3rd Qu.:37.00                   3rd Qu.:19957839  
+                 Max.   :46.00                   Max.   :20141025  
+                                                 NAs    :564       
+   last_epid        update_anchor     n_episodes    season_fraction  
+ Min.   :19751011   Mode :logical   Min.   : 1.00   Min.   :0.04167  
+ 1st Qu.:19850112   FALSE:541       1st Qu.:19.00   1st Qu.:1.00000  
+ Median :19950225   TRUE :73        Median :20.00   Median :1.00000  
+ Mean   :19944038                   Mean   :18.73   Mean   :0.94827  
+ 3rd Qu.:20040117                   3rd Qu.:21.00   3rd Qu.:1.00000  
+ Max.   :20140201                   Max.   :24.00   Max.   :1.00000  
+ NAs    :597                                                         </code></pre>
+</div>
+</div>
+<p>Our summary statistics confirm the presence of missing values. Furthermore, we can deduce that <code>first_epid</code> and <code>last_epid</code> represent chronological identifiers (episode IDs) rather than standard numeric measurements.</p>
+<p>Because <code>SQL</code> databases generally ingest data from local flat files rather than live URLs, our final preparatory step is to save this dataset locally as a <code>.csv</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># save the dataset as a .csv file on your (local) computer</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(casts, <span class="st">"casts.csv"</span>)   </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="data-types-in-sql" class="level2" data-number="4.3">
 <h2 data-number="4.3" class="anchored" data-anchor-id="data-types-in-sql"><span class="header-section-number">4.3</span> data types in SQL</h2>
-<p>Consult <a href="https://dev.mysql.com/doc/refman/8.0/en/data-types.html">data types</a> for details.</p>
+<p>When <code>R</code> imports a <code>.csv</code> file, it uses dynamic typing—it scans the first few thousand rows and guesses whether a column is numeric, character, or logical.</p>
+<p><code>SQL</code>, however, requires strict, explicit typing. When we create a database table, we must declare exactly what kind of data each column will hold. This rigorous requirement prevents data corruption (e.g., accidentally inserting the string “five” into a numeric column) and optimizes storage.</p>
+<p>Common <code>SQL</code> data types include <code>VARCHAR</code> (variable-length string), <code>INTEGER</code> (whole numbers), <code>SMALLINT</code> (smaller whole numbers to save space), <code>DOUBLE</code> (decimals), and <code>BOOLEAN</code> (True/False).</p>
+<p>Before proceeding, we highly recommend consulting the official <a href="https://dev.mysql.com/doc/refman/8.0/en/data-types.html">MySQL Data Types Documentation</a> for a comprehensive overview.</p>
 </section>
 <section id="importing-data" class="level2" data-number="4.4">
 <h2 data-number="4.4" class="anchored" data-anchor-id="importing-data"><span class="header-section-number">4.4</span> importing data</h2>
-<p>Once the database is set up, you will be ready to import .csv files into the database as tables. Importing .csv files as tables requires a series of steps:</p>
+<p>With our database set up, <code>.csv</code> file saved locally, and our data types mapped out, we are ready to build our database table. Importing flat files into a relational database requires a sequential, four-step pipeline:</p>
 <ul>
-<li>a <strong>USE</strong> statement that ensures we are in the right database.</li>
-<li>a series of <strong>DROP TABLE</strong> statements that drop any old tables with the same names as the ones we are going to create.</li>
-<li>a series of <strong>CREATE TABLE</strong> statements that specify the table structures and field types.</li>
-<li>a series of <strong>COPY</strong> (or <strong>LOAD DATA</strong> for MySQL) statements that read the data from the .csv files into the appropriate tables.</li>
+<li><p>a <strong>USE</strong> statement that ensures we are in the right database.</p></li>
+<li><p>a series of <strong>DROP TABLE</strong> statements that drop any old tables with the same names as the ones we are going to create.</p></li>
+<li><p>a series of <strong>CREATE TABLE</strong> statements that specify the table structures and field types.</p></li>
+<li><p>a series of <strong>COPY</strong> (or <strong>LOAD DATA</strong> for <code>MySQL</code>) statements that read the data from the <code>.csv</code> files into the appropriate tables.</p></li>
 </ul>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">USE</span> snl_db;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- step 1: ensure we are in the correct database </span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">USE</span> snl_db;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">DROP</span> <span class="kw">TABLE</span> <span class="cf">IF</span> <span class="kw">EXISTS</span> casts;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- step 2: Clear any existing table to ensure reproducibility</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="kw">DROP</span> <span class="kw">TABLE</span> <span class="cf">IF</span> <span class="kw">EXISTS</span> casts;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+<p>Now we define our schema. For every column, we specify the name, the exact data type, whether it is allowed to be empty (<code>NOT NULL</code>), and what the default value should be if a user forgets to provide data. Finally, we define a <strong>Primary Key</strong> — a unique identifier for each row.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> casts (</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  aid <span class="dt">VARCHAR</span>(<span class="dv">255</span>) <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="st">' '</span>,</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  sid <span class="dt">SMALLINT</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  featured <span class="dt">BOOLEAN</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="kw">FALSE</span>,  <span class="co">/* use TINYINT(1) in MySQL instead of BOOLEAN) */</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  first_epid <span class="dt">INTEGER</span> <span class="kw">DEFAULT</span> <span class="kw">NULL</span>,</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  last_epid <span class="dt">INTEGER</span> <span class="kw">DEFAULT</span> <span class="kw">NULL</span>,</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  update_anchor <span class="dt">BOOLEAN</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="kw">FALSE</span>,</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  n_episodes <span class="dt">SMALLINT</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  season_fraction <span class="dt">DOUBLE</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (sid, aid)</span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- step 3: define the strict schema</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> casts (</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  aid <span class="dt">VARCHAR</span>(<span class="dv">255</span>) <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="st">' '</span>,</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  sid <span class="dt">SMALLINT</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  featured <span class="dt">BOOLEAN</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="kw">FALSE</span>,  <span class="co">/* use TINYINT(1) in MySQL instead of BOOLEAN) */</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  first_epid <span class="dt">INTEGER</span> <span class="kw">DEFAULT</span> <span class="kw">NULL</span>,</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  last_epid <span class="dt">INTEGER</span> <span class="kw">DEFAULT</span> <span class="kw">NULL</span>,</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  update_anchor <span class="dt">BOOLEAN</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="kw">FALSE</span>,</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  n_episodes <span class="dt">SMALLINT</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  season_fraction <span class="dt">DOUBLE</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (sid, aid)</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+<div class="callout callout-style-default callout-tip callout-titled" title="Composite Primary Keys">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Composite Primary Keys
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Notice that our <code>PRIMARY KEY</code> is composed of two columns: (<code>sid</code>, <code>aid</code>). This is known as a <strong>composite key</strong>. It means that while a single actor (<code>aid</code>) might appear multiple times in the table, and a single season (<code>sid</code>) contains multiple actors, the combination of a specific actor in a specific season will only ever appear exactly once.</p>
+</div>
+</div>
+<p>With our empty structural shell created, we instruct the database engine to ingest the data from our local <code>.csv</code> file.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">COPY</span> casts <span class="kw">FROM</span> <span class="st">'casts.csv'</span> (FORMAT CSV, <span class="kw">HEADER</span>, <span class="kw">NULL</span> <span class="st">'NA'</span>);</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- step 4: load the data from the flat csv file</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="kw">COPY</span> casts <span class="kw">FROM</span> <span class="st">'casts.csv'</span> (FORMAT CSV, <span class="kw">HEADER</span>, <span class="kw">NULL</span> <span class="st">'NA'</span>);</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="checks" class="level2" data-number="4.5">
 <h2 data-number="4.5" class="anchored" data-anchor-id="checks"><span class="header-section-number">4.5</span> checks</h2>
+<p>It is vital to audit our work to ensure the data was ingested correctly and the schema holds up.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>SHOW DATABASES;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- verify the database exists</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>SHOW DATABASES;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>1 records</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">database_name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">snl_db</td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>SHOW <span class="kw">TABLES</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- verify our table exists</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>SHOW <span class="kw">TABLES</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>1 records</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">casts</td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>DESCRIBE casts;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- review the strict schema we defined</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>DESCRIBE casts;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>8 records</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">column_name</th>
+<th style="text-align: left;">column_type</th>
+<th style="text-align: left;">null</th>
+<th style="text-align: left;">key</th>
+<th style="text-align: left;">default</th>
+<th style="text-align: left;">extra</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">aid</td>
+<td style="text-align: left;">VARCHAR</td>
+<td style="text-align: left;">NO</td>
+<td style="text-align: left;">PRI</td>
+<td style="text-align: left;">’ ’</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sid</td>
+<td style="text-align: left;">SMALLINT</td>
+<td style="text-align: left;">NO</td>
+<td style="text-align: left;">PRI</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">featured</td>
+<td style="text-align: left;">BOOLEAN</td>
+<td style="text-align: left;">NO</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">CAST(‘f’ AS BOOLEAN)</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">first_epid</td>
+<td style="text-align: left;">INTEGER</td>
+<td style="text-align: left;">YES</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NULL</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">last_epid</td>
+<td style="text-align: left;">INTEGER</td>
+<td style="text-align: left;">YES</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NULL</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">update_anchor</td>
+<td style="text-align: left;">BOOLEAN</td>
+<td style="text-align: left;">NO</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">CAST(‘f’ AS BOOLEAN)</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">n_episodes</td>
+<td style="text-align: left;">SMALLINT</td>
+<td style="text-align: left;">NO</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">season_fraction</td>
+<td style="text-align: left;">DOUBLE</td>
+<td style="text-align: left;">NO</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">NA</td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> casts <span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- peek at the ingested data</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> casts <span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Displaying records 1 - 10</caption>
+<colgroup>
+<col style="width: 18%">
+<col style="width: 4%">
+<col style="width: 9%">
+<col style="width: 11%">
+<col style="width: 10%">
+<col style="width: 15%">
+<col style="width: 11%">
+<col style="width: 17%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">aid</th>
+<th style="text-align: right;">sid</th>
+<th style="text-align: left;">featured</th>
+<th style="text-align: right;">first_epid</th>
+<th style="text-align: right;">last_epid</th>
+<th style="text-align: left;">update_anchor</th>
+<th style="text-align: right;">n_episodes</th>
+<th style="text-align: right;">season_fraction</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">A. Whitney Brown</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">19860222</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">0.4444444</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">A. Whitney Brown</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">1.0000000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">A. Whitney Brown</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">1.0000000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">A. Whitney Brown</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">1.0000000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">A. Whitney Brown</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">1.0000000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">A. Whitney Brown</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">1.0000000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Alan Zweibel</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">19800409</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.2500000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sasheer Zamata</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">20140118</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">0.5238095</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sasheer Zamata</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">1.0000000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sasheer Zamata</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">1.0000000</td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 </section>
-<section id="shortcut-not-accepted-for-project-2" class="level2" data-number="4.6">
-<h2 data-number="4.6" class="anchored" data-anchor-id="shortcut-not-accepted-for-project-2"><span class="header-section-number">4.6</span> shortcut (not accepted for Project 2)</h2>
+<section id="shortcut---a-fast-but-fragile-route" class="level2" data-number="4.6">
+<h2 data-number="4.6" class="anchored" data-anchor-id="shortcut---a-fast-but-fragile-route"><span class="header-section-number">4.6</span> shortcut - a fast (but fragile) route</h2>
+<p>Many <code>R</code> packages, including <code>duckdb</code>, provide convenient wrapper functions that automate the entire pipeline we just built. These functions read the <code>.csv</code> file, guess the schema (just like <code>R</code> does), construct the <code>CREATE TABLE</code> statement silently, and ingest the data in a single line of code.</p>
+<p>Let us demonstrate this shortcut using the <code>episodes.csv</code> file.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># read in the data</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>episodes <span class="ot">&lt;-</span> readr<span class="sc">::</span><span class="fu">read_csv</span>(<span class="st">""</span>)</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(episodes)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># read in the data</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>episodes <span class="ot">&lt;-</span> readr<span class="sc">::</span><span class="fu">read_csv</span>(<span class="st">"https://raw.githubusercontent.com/hhllcks/snldb/refs/heads/master/output/episodes.csv"</span>)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(episodes)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 906
+Columns: 4
+$ sid   &lt;dbl&gt; 46, 46, 46, 46, 46, 46, 46, 46, 46, 46, 46, 46, 46, 46, 46, 46, …
+$ epid  &lt;dbl&gt; 20210410, 20210403, 20210327, 20210227, 20210220, 20210213, 2021…
+$ aired &lt;chr&gt; "April 10, 2021", "April 3, 2021", "March 27, 2021", "February 2…
+$ epno  &lt;dbl&gt; 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 18, 1…</code></pre>
+</div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># save the dataset as a .csv file on your (local) computer</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(episodes, <span class="st">"episodes.csv"</span>)   </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># save the dataset as a .csv file on your (local) computer</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(episodes, <span class="st">"episodes.csv"</span>)   </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Now, we can use the <code>duckdb_read_csv()</code> function to bypass raw <code>SQL</code> entirely:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>duckdb<span class="sc">::</span><span class="fu">duckdb_read_csv</span>(<span class="at">con =</span> con_snl, <span class="at">name =</span> <span class="st">"episodes"</span>, <span class="at">files =</span> <span class="st">"episodes.csv"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>We can verify that it worked using <code>SQL</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>SHOW <span class="kw">TABLES</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>2 records</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">casts</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">episodes</td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">duckdb_read_csv</span>(<span class="at">con =</span> con_snl, <span class="at">name =</span> <span class="st">"episodes"</span>, <span class="at">files =</span> <span class="st">"episodes.csv"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>DESCRIBE episodes;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>4 records</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">column_name</th>
+<th style="text-align: left;">column_type</th>
+<th style="text-align: left;">null</th>
+<th style="text-align: left;">key</th>
+<th style="text-align: left;">default</th>
+<th style="text-align: left;">extra</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">sid</td>
+<td style="text-align: left;">INTEGER</td>
+<td style="text-align: left;">YES</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">epid</td>
+<td style="text-align: left;">INTEGER</td>
+<td style="text-align: left;">YES</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">aired</td>
+<td style="text-align: left;">VARCHAR</td>
+<td style="text-align: left;">YES</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">epno</td>
+<td style="text-align: left;">INTEGER</td>
+<td style="text-align: left;">YES</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>SHOW <span class="kw">TABLES</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> episodes <span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Displaying records 1 - 10</caption>
+<thead>
+<tr class="header">
+<th style="text-align: right;">sid</th>
+<th style="text-align: right;">epid</th>
+<th style="text-align: left;">aired</th>
+<th style="text-align: right;">epno</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">20210410</td>
+<td style="text-align: left;">April 10, 2021</td>
+<td style="text-align: right;">17</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">20210403</td>
+<td style="text-align: left;">April 3, 2021</td>
+<td style="text-align: right;">16</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">20210327</td>
+<td style="text-align: left;">March 27, 2021</td>
+<td style="text-align: right;">15</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">20210227</td>
+<td style="text-align: left;">February 27, 2021</td>
+<td style="text-align: right;">14</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">20210220</td>
+<td style="text-align: left;">February 20, 2021</td>
+<td style="text-align: right;">13</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">20210213</td>
+<td style="text-align: left;">February 13, 2021</td>
+<td style="text-align: right;">12</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">20210206</td>
+<td style="text-align: left;">February 6, 2021</td>
+<td style="text-align: right;">11</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">20210130</td>
+<td style="text-align: left;">January 30, 2021</td>
+<td style="text-align: right;">10</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">20201219</td>
+<td style="text-align: left;">December 19, 2020</td>
+<td style="text-align: right;">9</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">20201212</td>
+<td style="text-align: left;">December 12, 2020</td>
+<td style="text-align: right;">8</td>
+</tr>
+</tbody>
+</table>
 </div>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>DESCRIBE episodes;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> episodes <span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-warning callout-titled" title="A Fragile Shortcut">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
 </div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>A Fragile Shortcut
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>While functions like <code>duckdb_read_csv()</code> are incredibly useful for rapid prototyping, they are fragile. By allowing the software to guess the schema, we forfeit control over our data architecture. A single malformed string deep in a numeric column could cause the wrapper function to declare the entire column as text, ruining downstream analysis.</p>
+<p>In rigorous data engineering contexts, we must demonstrate mastery over data integrity by explicitly writing <code>CREATE TABLE</code> schemas. We must dictate the rules, rather than relying on an algorithm to guess them.</p>
+</div>
+</div>
+</section>
+<section id="terminate-connection" class="level2" data-number="4.7">
+<h2 data-number="4.7" class="anchored" data-anchor-id="terminate-connection"><span class="header-section-number">4.7</span> terminate connection</h2>
+<p>As always, we conclude by cleanly severing our connection to the database.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># terminate the SQL connection</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbDisconnect</span>(con_snl, <span class="at">shutdown =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># terminate the SQL connection</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbDisconnect</span>(con_snl, <span class="at">shutdown =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 
 

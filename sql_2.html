@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>2&nbsp; Writing SQL queries – Advanced Data Computing (405 @ LU) Notes</title>
+<title>2&nbsp; Writing SQL Queries – Advanced Data Computing (405 @ LU) Notes</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -118,7 +118,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./SQL.html">SQL</a></li><li class="breadcrumb-item"><a href="./sql_2.html"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Writing SQL queries</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./SQL.html">SQL</a></li><li class="breadcrumb-item"><a href="./sql_2.html"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Writing SQL Queries</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -174,7 +174,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./sql_2.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Writing SQL queries</span></span></a>
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Writing SQL Queries</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -301,15 +301,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#method-2-using-dbplyr-with-raw-sql" id="toc-method-2-using-dbplyr-with-raw-sql" class="nav-link" data-scroll-target="#method-2-using-dbplyr-with-raw-sql"><span class="header-section-number">2.5.2</span> Method 2: using <code>dbplyr</code> with raw <code>SQL</code></a></li>
   <li><a href="#method-3-quarto-chunk-options" id="toc-method-3-quarto-chunk-options" class="nav-link" data-scroll-target="#method-3-quarto-chunk-options"><span class="header-section-number">2.5.3</span> Method 3: Quarto chunk options</a></li>
   </ul></li>
+  <li><a href="#terminate-connection" id="toc-terminate-connection" class="nav-link" data-scroll-target="#terminate-connection"><span class="header-section-number">2.6</span> terminate connection</a></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./SQL.html">SQL</a></li><li class="breadcrumb-item"><a href="./sql_2.html"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Writing SQL queries</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./SQL.html">SQL</a></li><li class="breadcrumb-item"><a href="./sql_2.html"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Writing SQL Queries</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Writing SQL queries</span></h1>
+<h1 class="title"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Writing SQL Queries</span></h1>
 </div>
 
 
@@ -574,13 +575,13 @@ WHERE (`year` = 2013.0 AND ((`origin` = 'LAX' AND `dest` = 'BOS') OR (`origin` =
 #   cancelled &lt;int&gt;, diverted &lt;int&gt;, hour &lt;int&gt;, minute &lt;int&gt;, time_hour &lt;dttm&gt;</code></pre>
 </div>
 </div>
-<div class="callout callout-style-default callout-warning callout-titled" title="Where `dbplyr` translation breaks down">
+<div class="callout callout-style-default callout-warning callout-titled" title="Where `dbplyr` Translation Breaks Down">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Warning</span>Where <code>dbplyr</code> translation breaks down
+<span class="screen-reader-only">Warning</span>Where <code>dbplyr</code> Translation Breaks Down
 </div>
 </div>
 <div class="callout-body-container callout-body">
@@ -1135,13 +1136,13 @@ FROM (
 </table>
 </div>
 </div>
-<div class="callout callout-style-default callout-note callout-titled" title="Written order of `SQL` clauses">
+<div class="callout callout-style-default callout-note callout-titled" title="Written Order of `SQL` Clauses">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Written order of <code>SQL</code> clauses
+<span class="screen-reader-only">Note</span>Written Order of <code>SQL</code> Clauses
 </div>
 </div>
 <div class="callout-body-container callout-body">
@@ -2400,13 +2401,13 @@ FROM (
 </table>
 </div>
 </div>
-<div class="callout callout-style-default callout-note callout-titled" title="Logical operators `AND` and `OR`">
+<div class="callout callout-style-default callout-note callout-titled" title="Logical Operators `AND` and `OR`">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Logical operators <code>AND</code> and <code>OR</code>
+<span class="screen-reader-only">Note</span>Logical Operators <code>AND</code> and <code>OR</code>
 </div>
 </div>
 <div class="callout-body-container callout-body">
@@ -2845,13 +2846,13 @@ FROM (
 </table>
 </div>
 </div>
-<div class="callout callout-style-default callout-note callout-titled" title="Which approach to use?">
+<div class="callout callout-style-default callout-note callout-titled" title="Which Approach to Use?">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Which approach to use?
+<span class="screen-reader-only">Note</span>Which Approach to Use?
 </div>
 </div>
 <div class="callout-body-container callout-body">
@@ -2893,6 +2894,10 @@ FROM (
 <span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> flights <span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>All three methods are valid. We select the one that best fits our workflow and the complexity of the query we need to execute.</p>
+</section>
+</section>
+<section id="terminate-connection" class="level2" data-number="2.6">
+<h2 data-number="2.6" class="anchored" data-anchor-id="terminate-connection"><span class="header-section-number">2.6</span> terminate connection</h2>
 <p>Finally, always remember to disconnect your connection to the server.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># terminate the SQL connection</span></span>
@@ -2901,7 +2906,6 @@ FROM (
 </div>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->
