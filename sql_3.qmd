@@ -1,14 +1,21 @@
 ---
 title: "Joins, Unions, and Subqueries"
 execute: 
-  eval: false
+  eval: true
   warning: false
   message: false
-  cache: true
+  cache: false
 ---
 
+In our previous chapters, we focused on extracting and aggregating data from a single table. However, the defining feature of a **relational database** is that data is deliberately distributed across multiple tables. This design principle, known as **normalization**, eliminates data redundancy, saves storage space, and ensures data integrity. 
+
+For example, instead of repeating the full name of an airline on every single row of the `flights` dataset, the `flights` table only stores a brief carrier code (e.g., "DL"). If we want the full name ("Delta Air Lines Inc."), we must link the `flights` table to the `carriers` table. 
+
+In this chapter, we explore how to stitch these normalized tables back together.
 
 ## load packages and connect to database server
+
+Let us load our required packages and establish our connection to the `airlines` database.
 
 ```{r}
 #| warning: false
@@ -32,6 +39,9 @@ DBI::dbListTables(con_air)   # list tables in database
 ```
 
 
+We will create our standard lazy pointers for the three tables we will analyze in this chapter: `flights`, `carriers`, and `airports`.
+
+
 ```{r}
 # access tables from the airlines database
 
@@ -43,6 +53,10 @@ airports <- dplyr::tbl(con_air, "airports")
 
 ```
 
+
+Before joining tables, it is standard practice to examine their schemas using the `DESCRIBE` command. We must identify the **keys** — the columns that exist in both tables and will serve as our connective tissue.
+
+### `flights` table
 
 
 ```{sql}
@@ -59,6 +73,7 @@ SELECT * FROM flights LIMIT 10;
 ```
 
 
+### `carriers` table
 
 ```{sql}
 --| connection: con_air
@@ -74,6 +89,7 @@ SELECT * FROM carriers LIMIT 100;
 ```
 
 
+### `airports` table
 
 ```{sql}
 --| connection: con_air
@@ -91,9 +107,9 @@ SELECT * FROM airports LIMIT 100;
 
 
 
-## Joins
+## Joins (Horizontal Integration)
 
-In general, there are four pieces of information that you need to specify in order to join two tables:
+To combine tables horizontally (adding columns from one table to another), we use `SQL` joins. In general, we must specify four pieces of information to successfully join two tables:
 
 * name of the first table
 * type of join
@@ -101,69 +117,185 @@ In general, there are four pieces of information that you need to specify in ord
 * condition(s) of the join
 
 
-The following join types are available in MySQL dialect of SQL:
+The `MySQL` dialect supports several types of joins, which translate directly to the verbs we use in `dplyr`:
 
-* **JOIN**
-* **LEFT JOIN**
-* **RIGHT JOIN**
-* **CROSS JOIN**
+* **JOIN (or INNER JOIN)**: Returns only the rows that have matching values in both tables. Equivalent to `dplyr::inner_join()` in `R`.
+
+* **LEFT JOIN** - Returns all rows from the left table, and the matched rows from the right table. Unmatched rows yield `NULL`. Equivalent to `dplyr::left_join()`.
+
+* **RIGHT JOIN** - Returns all rows from the right table, and the matched rows from the left. Equivalent to `dplyr::right_join()`.
+
+* **CROSS JOIN** - Returns the Cartesian product of rows from both tables. (Rarely used in standard data science workflows as it generates massive output).
+
+::: {.callout-note title="The Missing FULL JOIN"}
+Notice that `FULL JOIN` (equivalent to `R`'s `full_join()`) is missing from this list. `MySQL` and `MariaDB` do not natively support full outer joins. If we were using `PostgreSQL` or `DuckDB`, `FULL OUTER JOIN` would be available. In `MySQL`, we have to construct a full join manually by taking a `LEFT JOIN` and combining it with a `RIGHT JOIN` using a `UNION`.
+:::
 
 
-```{sql connection="con_air"}
+### `INNER JOIN`
+
+Suppose we want to access the full airport names for all flights that flew out of Appleton (ATW) in 2013. The flights table contains the destination code (`dest`), and the airports table contains the destination code (`faa`) alongside the full name.
+
+```{sql}
+--| connection: con_air
 
 -- access airport names for flights that flew out of Appleton in 2013
 
+SELECT origin, dest, a.name AS dest_name, flight, carrier
+FROM flights AS f
+JOIN airports AS a ON f.dest = a.faa
+WHERE year = 2013 AND origin = 'ATW'
+LIMIT 10;
 
 
 ```
 
 
-```{sql connection="con_air"}
+Notice our use of the `AS` keyword in the `FROM` and `JOIN` clauses to create aliases (`f` for `flights` and `a` for `airports`). This is a critical best practice. It saves us from typing the full table name repeatedly, and more importantly, it prevents ambiguity errors. If both tables contained a column named `year`, calling `SELECT year` would cause the query to crash; we would have to explicitly declare `SELECT f.year`.
+
+
+Data architectures often require us to chain **multiple joins** together to assemble a complete picture. What if we want the full names of the origin airport, the destination airport, and the carrier?
+
+Because we need airport names for both the origin and the destination, we must join the `airports` table to our query twice. To do this, we must give the `airports` table two distinct aliases.
+
+
+```{sql}
+--| connection: con_air
 
 -- access both airport and carrier names for flights that flew out of Appleton in 2013
 
-
+SELECT origin, a2.name AS origin_name, 
+       dest, a1.name AS dest_name, 
+       flight, 
+       f.carrier, c.name AS carrier_name
+FROM flights AS f
+JOIN airports AS a1 ON f.dest = a1.faa
+JOIN airports AS a2 ON f.origin = a2.faa
+JOIN carriers AS c ON f.carrier = c.carrier
+WHERE origin = 'ATW' AND year = 2013
+LIMIT 10;
 
 ```
 
 
-```{sql connection="con_air"}
+### `LEFT JOIN`
+
+While inner joins find intersections, `LEFT JOIN` is exceptionally useful for finding missing or mismatched data.
+
+Let us intentionally look for destination airport codes in the `flights` table that do not have a corresponding entry in the `airports` table. We do this by performing a `LEFT JOIN` and filtering for rows where the airport name resolves to `NULL`.
+
+```{sql}
+--| connection: con_air
 
 -- using LEFT JOIN
 
+SELECT year, month, day, origin, dest,
+      a.name AS dest_name,
+      flight, carrier
+FROM flights AS f
+LEFT JOIN airports AS a ON f.dest = a.faa
+WHERE a.name IS NULL
+LIMIT 10;
+
+```
+
+
+In applied contexts, queries like this are fundamental to data auditing. In this specific dataset, this query reveals flights traveling to US territories like Puerto Rico (BQN, SJU) or the Virgin Islands (STT). Because they operate slightly outside the standard domestic FAA categorization used to build our `airports` table, they show up as missing values in our join.
+
+
+::: {.callout-note title="Handling Missing Values in `SQL`"}
+Users of `R` are used to `NA` and functions like `is.na()`. `SQL` has a related but stricter concept: `NULL`, representing an **unknown or missing value**. The critical difference is that `NULL` cannot be compared using the standard `=` operator. A test like `a.name = NULL` does not evaluate to `TRUE` or `FALSE` — it evaluates to `UNKNOWN`, and rows where this happens are silently excluded from the result, with no error raised. To correctly test for missing values, `SQL` provides the dedicated keywords `IS NULL` and `IS NOT NULL`. 
+
+Notice the difference in the `WHERE` clause between the queries above and below..
+
+```{sql}
+--| connection: con_air
+
+SELECT year, month, day, origin, dest,
+      a.name AS dest_name,
+      flight, carrier
+FROM flights AS f
+LEFT JOIN airports AS a ON f.dest = a.faa
+WHERE a.name = NULL
+LIMIT 10;
+
+```
+
+:::
+
+
+## Unions (Vertical Integration)
+
+While joins add columns to our result set, set operations add rows. `UNION` allows us to append the results of one query directly beneath the results of another, much like `dplyr::bind_rows()`.
+
+Let us extract a dataset combining all flights that flew from ATW to MSP on April 6, 2013, with all flights that flew from JFK to ORD on the same day.
+
+```{sql}
+--| connection: con_air
+
+-- extract all flights that flew from ATW to MSP and from JFK to ORD on April 6, 2013
+
+(SELECT year, month, day, origin, dest, flight, carrier
+FROM flights
+WHERE year = 2013 AND month = 4 AND day = 6 AND origin = 'ATW' AND dest = 'MSP')
+
+UNION
+
+(SELECT year, month, day, origin, dest, flight, carrier
+FROM flights
+WHERE year = 2013 AND month = 4 AND day = 6 AND origin = 'JFK' AND dest = 'ORD')
+
+LIMIT 10;
 
 
 ```
 
 
+::: {.callout-warning title="Union Edge Cases"}
+When using `UNION`, we must be aware of two strict database rules:
 
+* **Column Matching**: Unlike `R`'s `bind_rows()`, which politely aligns columns by their names and fills in NAs where they don't match, `SQL` `UNION` does not check column names. It blindly stacks the tables based on the number of columns and their data types. If query A returns a string in column 1, and query B returns an integer in column 1, the query will fail.
 
-## Unions
+* **Deduplication**: By default, `UNION` removes exact duplicate rows from the final result set. Searching for and removing duplicates is computationally expensive. If we know our datasets are mutually exclusive (as they are above) or if we want to retain duplicates, we should use `UNION ALL`, which simply appends the rows and executes much faster.
 
-```{sql connection="con_air"}
-
--- extract all flights that flew from ATW to MSP and from JFK to ORD on April 14, 2013
-
-
-
-```
-
+:::
 
 
 
 ## Subqueries
 
-```{sql connection="con_air"}
+As our analytical questions grow more sophisticated, we often encounter situations where we cannot get our answer in a single pass. We need to evaluate a query, hold the result in memory, and then query that result.
+
+We do this using subqueries. A **subquery** is simply a complete `SELECT` statement wrapped in parentheses and placed inside the `FROM` or `WHERE` clause of a parent query.
+
+Let us return to the `UNION` query we just wrote above. What if we don't want to see the rows, but rather we just want a count of the total number of flights across both of those specific routes? We can wrap the entire `UNION` in parentheses and run a `COUNT(*)` over it.
+
+```{sql}
+--| connection: con_air
 
 -- count the number of flights that satisfy the criteria above
 
-
+SELECT COUNT(*) AS num_flights
+FROM 
+((SELECT year, month, day, origin, dest, flight, carrier
+FROM flights
+WHERE year = 2013 AND month = 4 AND day = 6 AND origin = 'ATW' AND dest = 'MSP')
+UNION
+(SELECT year, month, day, origin, dest, flight, carrier
+FROM flights
+WHERE year = 2013 AND month = 4 AND day = 6 AND origin = 'JFK' AND dest = 'ORD')
+) AS temp_subquery;
 
 ```
 
+::: {.callout-tip title="The Mandatory Alias"}
+When we place a subquery inside a `FROM` clause, we are essentially creating a temporary table on the fly (often called a **derived table**). In `MySQL` and `MariaDB`, every derived table must have its own alias, even if we never explicitly refer to that alias in the `SELECT` statement. Notice the `AS temp_subquery` at the very end of our code block; without it, the `SQL` engine would throw a syntax error.
+:::
 
 
+## terminate connection
 
+As always, we conclude our workflow by responsibly closing our database connections to free up memory on both our local machine and the remote server.
 
 ```{r}
 # terminate the SQL connection

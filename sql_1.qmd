@@ -237,6 +237,7 @@ flights_df <- flights |>
 
 :::
 
+## terminate connection
 
 Just as we would close a file after editing it, we must explicitly sever our connection to a remote database when our analysis is complete. Open connections consume resources on both our local machine and the remote server.
 

@@ -708,6 +708,8 @@ SELECT * FROM flights LIMIT 10;
 
 All three methods are valid. We select the one that best fits our workflow and the complexity of the query we need to execute.
 
+## terminate connection
+
 Finally, always remember to disconnect your connection to the server.
 
 ```{r}
