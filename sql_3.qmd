@@ -136,6 +136,9 @@ Notice that `FULL JOIN` (equivalent to `R`'s `full_join()`) is missing from this
 
 Suppose we want to access the full airport names for all flights that flew out of Appleton (ATW) in 2013. The flights table contains the destination code (`dest`), and the airports table contains the destination code (`faa`) alongside the full name.
 
+Before we write our first join, it is worth noting a small but important habit: once a query involves more than one table, we typically give each table a short **alias** (e.g., `f` for `flights`, `a` for `airports` below) using the `AS` keyword. This is not just a convenience for shorter typing — it prevents **ambiguity errors**. If two tables in a join both contain a column with the same name (such as `year`), simply writing `SELECT year` leaves the database unable to determine which table's `year` we mean, and the query will fail. Prefixing the column with its table alias, as in `f.year`, resolves the ambiguity. We will see this pattern in every join query below.
+
+
 ```{sql}
 --| connection: con_air
 
@@ -151,7 +154,30 @@ LIMIT 10;
 ```
 
 
-Notice our use of the `AS` keyword in the `FROM` and `JOIN` clauses to create aliases (`f` for `flights` and `a` for `airports`). This is a critical best practice. It saves us from typing the full table name repeatedly, and more importantly, it prevents ambiguity errors. If both tables contained a column named `year`, calling `SELECT year` would cause the query to crash; we would have to explicitly declare `SELECT f.year`.
+Notice our use of the `AS` keyword in the `FROM` and `JOIN` clauses to create aliases (`f` for `flights` and `a` for `airports`). This is a critical best practice. It saves us from typing the full table name repeatedly, and more importantly, it prevents ambiguity errors. 
+
+::: {.callout-note title="`dplyr` Equivalent of Above `SQL` Join"}
+
+As mentioned above, every `SQL` join has a direct `dplyr` counterpart. Here, `SQL`'s `JOIN ... ON f.dest = a.faa` becomes `dplyr::inner_join(airports, by = c("dest" = "faa"))` - see the code below. 
+
+Notice one important difference: in `SQL` we specify the join condition with `ON`, while in `dplyr` we specify it with the `by` argument, mapping the column name in the left table to the (possibly differently named) column in the right table. If we call `inner_join()` without a `by` argument, `dplyr` will attempt to guess the join column using any identically named columns in both tables — and will warn us about which column it chose. **Relying on this behavior is risky: always specify `by` explicitly**.
+
+```{r}
+#| eval: false
+
+# equivalent query using dplyr's inner_join()
+# please do not execute the following code, this will crash your machine
+
+flights |>
+  filter(year == 2013, origin == "ATW") |>
+  inner_join(airports, by = c("dest" = "faa")) |>
+  select(origin, dest, dest_name = name, flight, carrier)
+
+
+```
+
+:::
+
 
 
 Data architectures often require us to chain **multiple joins** together to assemble a complete picture. What if we want the full names of the origin airport, the destination airport, and the carrier?
@@ -203,6 +229,25 @@ LIMIT 10;
 In applied contexts, queries like this are fundamental to data auditing. In this specific dataset, this query reveals flights traveling to US territories like Puerto Rico (BQN, SJU) or the Virgin Islands (STT). Because they operate slightly outside the standard domestic FAA categorization used to build our `airports` table, they show up as missing values in our join.
 
 
+::: {.callout-tip title="`dplyr::anti_join()` Pattern"}
+The query above — a `LEFT JOIN` followed by a filter for `IS NULL` on the right-hand table — is common enough to have its own name: an **anti-join**. It answers the question "which rows in the first table have **no match at all** in the second table?" This is exactly what `dplyr::anti_join()` does in one step:
+
+```{r}
+#| eval: false
+
+# equivalent query using dplyr's anti_join()
+# please do not execute the following code, this will crash your machine
+
+flights |>
+ anti_join(airports, by = c("dest" = "faa")) |>
+ select(year, month, day, origin, dest_name = name, flight, carrier)
+
+```
+
+Under the hood, `dplyr::anti_join()` is implemented using this same left-join-plus-filter logic. Recognizing the pattern is useful because anti-joins come up constantly in real data work: finding orders with no matching customer record, students with no matching enrollment record, or — as here — destination codes with no matching airport record.
+
+:::
+
 ::: {.callout-note title="Handling Missing Values in `SQL`"}
 Users of `R` are used to `NA` and functions like `is.na()`. `SQL` has a related but stricter concept: `NULL`, representing an **unknown or missing value**. The critical difference is that `NULL` cannot be compared using the standard `=` operator. A test like `a.name = NULL` does not evaluate to `TRUE` or `FALSE` — it evaluates to `UNKNOWN`, and rows where this happens are silently excluded from the result, with no error raised. To correctly test for missing values, `SQL` provides the dedicated keywords `IS NULL` and `IS NOT NULL`. 
 
@@ -222,6 +267,31 @@ LIMIT 10;
 ```
 
 :::
+
+
+### `RIGHT JOIN`
+
+`RIGHT JOIN` is simply the mirror image of `LEFT JOIN`: it keeps all rows from the table on the **right** side of the join, along with matching rows from the table on the left. In fact, any `RIGHT JOIN` can be rewritten as an equivalent `LEFT JOIN` just by swapping the order of the two tables — and vice versa. The results of the `LEFT JOIN` query above and the `RIGHT JOIN` query below are identical.
+
+Because of this symmetry, most `SQL` style guides recommend sticking to `LEFT JOIN` for consistency and simply reordering tables as needed, rather than mixing `LEFT` and `RIGHT` in the same project. This is also why `dplyr` provides `right_join()` mainly for completeness — in practice, most `R` users express the same logic with `left_join()` and swap the table order instead.
+
+
+```{sql}
+--| connection: con_air
+
+-- same result as our LEFT JOIN example above, but written as a RIGHT JOIN
+-- with the tables swapped
+
+SELECT year, month, day, origin, dest,
+      a.name AS dest_name,
+      flight, carrier
+FROM airports AS a
+RIGHT JOIN flights AS f ON f.dest = a.faa
+WHERE a.name IS NULL
+LIMIT 10;
+
+```
+
 
 
 ## Unions (Vertical Integration)
@@ -261,6 +331,49 @@ When using `UNION`, we must be aware of two strict database rules:
 :::
 
 
+`UNION` is only one of three standard set operations available in `SQL`. The other two — `INTERSECT` and `EXCEPT` — follow the exact same syntax rules (each side must be a complete `SELECT` statement with matching columns and types), but combine rows differently:
+
+* **`INTERSECT`** keeps only the rows that appear in **both** result sets — analogous to `dplyr::intersect()`.
+
+```{sql}
+--| connection: con_air
+
+-- destinations served from ORD in 2013 that were ALSO served in 2015
+-- (INTERSECT keeps only rows that appear in BOTH result sets)
+
+(SELECT DISTINCT dest FROM flights WHERE origin = 'ORD' AND year = 2013)
+
+INTERSECT
+
+(SELECT DISTINCT dest FROM flights WHERE origin = 'ORD' AND year = 2015);
+
+```
+
+* **`EXCEPT`** keeps rows from the first result set that do **not** appear in the second — analogous to `dplyr::setdiff()`.
+
+```{sql}
+--| connection: con_air
+
+-- destinations served from ORD in 2013 that were NOT served in 2015
+-- (EXCEPT keeps rows from the first result set that do NOT appear in the second)
+
+(SELECT DISTINCT dest FROM flights WHERE origin = 'ORD' AND year = 2013)
+
+EXCEPT
+
+(SELECT DISTINCT dest FROM flights WHERE origin = 'ORD' AND year = 2015);
+
+```
+
+
+The two queries above ask complementary questions about Chicago O'Hare's route network: which destinations were served in both 2013 and 2015 (`INTERSECT`), and which destinations were served in 2013 but dropped by 2015 (`EXCEPT`). 
+
+Together with `UNION`, these three operations round out our vertical-integration toolkit: 
+
+* `UNION` stacks rows together, 
+* `INTERSECT` finds their overlap, and 
+* `EXCEPT` finds their difference.
+
 
 ## Subqueries
 
@@ -291,6 +404,50 @@ WHERE year = 2013 AND month = 4 AND day = 6 AND origin = 'JFK' AND dest = 'ORD')
 ::: {.callout-tip title="The Mandatory Alias"}
 When we place a subquery inside a `FROM` clause, we are essentially creating a temporary table on the fly (often called a **derived table**). In `MySQL` and `MariaDB`, every derived table must have its own alias, even if we never explicitly refer to that alias in the `SELECT` statement. Notice the `AS temp_subquery` at the very end of our code block; without it, the `SQL` engine would throw a syntax error.
 :::
+
+
+The subquery in our previous example was used as a **derived table** — it stood in for an entire table in the `FROM` clause. Subqueries have a second, equally common use: appearing inside a `WHERE` clause to filter rows based on the result of another query.
+
+In the following example, the **inner** query runs first, independently, and returns a list of carrier codes whose full name contains the word "Airlines" (using the `LIKE` operator together with the `%` wildcard, which matches any sequence of characters). The **outer** query then uses `IN` to keep only `flights` rows whose `carrier` appears in that list. 
+
+```{sql}
+--| connection: con_air
+
+-- flights operated by any carrier whose name contains "Airlines"
+
+SELECT year, month, day, origin, dest, carrier, flight
+FROM flights
+WHERE carrier IN (
+  SELECT carrier
+  FROM carriers
+  WHERE name LIKE '%Airlines%'
+)
+LIMIT 10;
+
+```
+
+Conceptually, this is similar to first running `carriers |> filter(str_detect(name, "Airlines")) |> pull(carrier)` in `R`, and then using the result inside a `flights |> filter(carrier %in% ...)` call — except `SQL` performs both steps as a single query sent to the server.
+
+::: {.callout-tip title="A Helpful Mental Model"}
+A `FROM`-clause subquery builds a **temporary table**; a `WHERE`-clause subquery builds a **temporary list of values** to filter against.
+:::
+
+## which join/set operation/subquery to use?
+
+In this chapter, we have been introduced to several distinct ways of combining data across tables and queries. As with the three `SQL`-in-`R` methods from Chapter 2, a short decision guide is more useful in practice than memorizing definitions:
+
+* **Use an `INNER JOIN`** when we only want rows that have a match in both tables — for example, flights whose destination airport is known.
+
+* **Use a `LEFT JOIN`** when we want to keep every row from your primary table regardless of whether a match exists — and especially when **auditing** for missing or unmatched data (our anti-join example above).
+
+* **Use `UNION` / `UNION ALL`** when we are stacking comparable rows from two or more separately filtered queries into one result set.
+
+* **Use `INTERSECT` or `EXCEPT`** when our question is about **overlap** or **difference** between two sets of values, rather than about combining full rows.
+
+* **Use a subquery** when a question genuinely requires two passes over the data — first computing an intermediate result, then filtering or aggregating based on it — and a single `WHERE`/`GROUP BY`/`HAVING` combination cannot express the logic directly.
+
+As our queries grow more complex, we will often combine several of these tools in a single analysis: joining tables to bring in descriptive names, filtering with a subquery, and aggregating the result — much as we did across the above sections.
+
 
 
 ## terminate connection
