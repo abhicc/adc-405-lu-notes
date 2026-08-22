@@ -291,10 +291,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#inner-join" id="toc-inner-join" class="nav-link" data-scroll-target="#inner-join"><span class="header-section-number">3.2.1</span> <code>INNER JOIN</code></a></li>
   <li><a href="#left-join" id="toc-left-join" class="nav-link" data-scroll-target="#left-join"><span class="header-section-number">3.2.2</span> <code>LEFT JOIN</code></a></li>
+  <li><a href="#right-join" id="toc-right-join" class="nav-link" data-scroll-target="#right-join"><span class="header-section-number">3.2.3</span> <code>RIGHT JOIN</code></a></li>
   </ul></li>
   <li><a href="#unions-vertical-integration" id="toc-unions-vertical-integration" class="nav-link" data-scroll-target="#unions-vertical-integration"><span class="header-section-number">3.3</span> Unions (Vertical Integration)</a></li>
   <li><a href="#subqueries" id="toc-subqueries" class="nav-link" data-scroll-target="#subqueries"><span class="header-section-number">3.4</span> Subqueries</a></li>
-  <li><a href="#terminate-connection" id="toc-terminate-connection" class="nav-link" data-scroll-target="#terminate-connection"><span class="header-section-number">3.5</span> terminate connection</a></li>
+  <li><a href="#which-joinset-operationsubquery-to-use" id="toc-which-joinset-operationsubquery-to-use" class="nav-link" data-scroll-target="#which-joinset-operationsubquery-to-use"><span class="header-section-number">3.5</span> which join/set operation/subquery to use?</a></li>
+  <li><a href="#terminate-connection" id="toc-terminate-connection" class="nav-link" data-scroll-target="#terminate-connection"><span class="header-section-number">3.6</span> terminate connection</a></li>
   </ul>
 </nav>
     </div>
@@ -1113,6 +1115,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="inner-join" class="level3" data-number="3.2.1">
 <h3 data-number="3.2.1" class="anchored" data-anchor-id="inner-join"><span class="header-section-number">3.2.1</span> <code>INNER JOIN</code></h3>
 <p>Suppose we want to access the full airport names for all flights that flew out of Appleton (ATW) in 2013. The flights table contains the destination code (<code>dest</code>), and the airports table contains the destination code (<code>faa</code>) alongside the full name.</p>
+<p>Before we write our first join, it is worth noting a small but important habit: once a query involves more than one table, we typically give each table a short <strong>alias</strong> (e.g., <code>f</code> for <code>flights</code>, <code>a</code> for <code>airports</code> below) using the <code>AS</code> keyword. This is not just a convenience for shorter typing — it prevents <strong>ambiguity errors</strong>. If two tables in a join both contain a column with the same name (such as <code>year</code>), simply writing <code>SELECT year</code> leaves the database unable to determine which table’s <code>year</code> we mean, and the query will fail. Prefixing the column with its table alias, as in <code>f.year</code>, resolves the ambiguity. We will see this pattern in every join query below.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- access airport names for flights that flew out of Appleton in 2013</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -1208,22 +1211,45 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 </div>
 </div>
-<p>Notice our use of the <code>AS</code> keyword in the <code>FROM</code> and <code>JOIN</code> clauses to create aliases (<code>f</code> for <code>flights</code> and <code>a</code> for <code>airports</code>). This is a critical best practice. It saves us from typing the full table name repeatedly, and more importantly, it prevents ambiguity errors. If both tables contained a column named <code>year</code>, calling <code>SELECT year</code> would cause the query to crash; we would have to explicitly declare <code>SELECT f.year</code>.</p>
+<p>Notice our use of the <code>AS</code> keyword in the <code>FROM</code> and <code>JOIN</code> clauses to create aliases (<code>f</code> for <code>flights</code> and <code>a</code> for <code>airports</code>). This is a critical best practice. It saves us from typing the full table name repeatedly, and more importantly, it prevents ambiguity errors.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="`dplyr` Equivalent of Above `SQL` Join">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span><code>dplyr</code> Equivalent of Above <code>SQL</code> Join
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>As mentioned above, every <code>SQL</code> join has a direct <code>dplyr</code> counterpart. Here, <code>SQL</code>’s <code>JOIN ... ON f.dest = a.faa</code> becomes <code>dplyr::inner_join(airports, by = c("dest" = "faa"))</code> - see the code below.</p>
+<p>Notice one important difference: in <code>SQL</code> we specify the join condition with <code>ON</code>, while in <code>dplyr</code> we specify it with the <code>by</code> argument, mapping the column name in the left table to the (possibly differently named) column in the right table. If we call <code>inner_join()</code> without a <code>by</code> argument, <code>dplyr</code> will attempt to guess the join column using any identically named columns in both tables — and will warn us about which column it chose. <strong>Relying on this behavior is risky: always specify <code>by</code> explicitly</strong>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># equivalent query using dplyr's inner_join()</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># please do not execute the following code, this will crash your machine</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>flights <span class="sc">|&gt;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(year <span class="sc">==</span> <span class="dv">2013</span>, origin <span class="sc">==</span> <span class="st">"ATW"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">inner_join</span>(airports, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"dest"</span> <span class="ot">=</span> <span class="st">"faa"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(origin, dest, <span class="at">dest_name =</span> name, flight, carrier)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
 <p>Data architectures often require us to chain <strong>multiple joins</strong> together to assemble a complete picture. What if we want the full names of the origin airport, the destination airport, and the carrier?</p>
 <p>Because we need airport names for both the origin and the destination, we must join the <code>airports</code> table to our query twice. To do this, we must give the <code>airports</code> table two distinct aliases.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- access both airport and carrier names for flights that flew out of Appleton in 2013</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> origin, a2.name <span class="kw">AS</span> origin_name, </span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>       dest, a1.name <span class="kw">AS</span> dest_name, </span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>       flight, </span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>       f.carrier, c.name <span class="kw">AS</span> carrier_name</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights <span class="kw">AS</span> f</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="kw">JOIN</span> airports <span class="kw">AS</span> a1 <span class="kw">ON</span> f.dest <span class="op">=</span> a1.faa</span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="kw">JOIN</span> airports <span class="kw">AS</span> a2 <span class="kw">ON</span> f.origin <span class="op">=</span> a2.faa</span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="kw">JOIN</span> carriers <span class="kw">AS</span> c <span class="kw">ON</span> f.carrier <span class="op">=</span> c.carrier</span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> origin <span class="op">=</span> <span class="st">'ATW'</span> <span class="kw">AND</span> <span class="dt">year</span> <span class="op">=</span> <span class="dv">2013</span></span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- access both airport and carrier names for flights that flew out of Appleton in 2013</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> origin, a2.name <span class="kw">AS</span> origin_name, </span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>       dest, a1.name <span class="kw">AS</span> dest_name, </span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>       flight, </span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>       f.carrier, c.name <span class="kw">AS</span> carrier_name</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights <span class="kw">AS</span> f</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="kw">JOIN</span> airports <span class="kw">AS</span> a1 <span class="kw">ON</span> f.dest <span class="op">=</span> a1.faa</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="kw">JOIN</span> airports <span class="kw">AS</span> a2 <span class="kw">ON</span> f.origin <span class="op">=</span> a2.faa</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="kw">JOIN</span> carriers <span class="kw">AS</span> c <span class="kw">ON</span> f.carrier <span class="op">=</span> c.carrier</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> origin <span class="op">=</span> <span class="st">'ATW'</span> <span class="kw">AND</span> <span class="dt">year</span> <span class="op">=</span> <span class="dv">2013</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>Displaying records 1 - 10</caption>
@@ -1348,15 +1374,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>While inner joins find intersections, <code>LEFT JOIN</code> is exceptionally useful for finding missing or mismatched data.</p>
 <p>Let us intentionally look for destination airport codes in the <code>flights</code> table that do not have a corresponding entry in the <code>airports</code> table. We do this by performing a <code>LEFT JOIN</code> and filtering for rows where the airport name resolves to <code>NULL</code>.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- using LEFT JOIN</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="dt">year</span>, <span class="dt">month</span>, <span class="dt">day</span>, origin, dest,</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>      a.name <span class="kw">AS</span> dest_name,</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>      flight, carrier</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights <span class="kw">AS</span> f</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="kw">LEFT</span> <span class="kw">JOIN</span> airports <span class="kw">AS</span> a <span class="kw">ON</span> f.dest <span class="op">=</span> a.faa</span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> a.name <span class="kw">IS</span> <span class="kw">NULL</span></span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- using LEFT JOIN</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="dt">year</span>, <span class="dt">month</span>, <span class="dt">day</span>, origin, dest,</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>      a.name <span class="kw">AS</span> dest_name,</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>      flight, carrier</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights <span class="kw">AS</span> f</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="kw">LEFT</span> <span class="kw">JOIN</span> airports <span class="kw">AS</span> a <span class="kw">ON</span> f.dest <span class="op">=</span> a.faa</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> a.name <span class="kw">IS</span> <span class="kw">NULL</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>Displaying records 1 - 10</caption>
@@ -1478,6 +1504,28 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>In applied contexts, queries like this are fundamental to data auditing. In this specific dataset, this query reveals flights traveling to US territories like Puerto Rico (BQN, SJU) or the Virgin Islands (STT). Because they operate slightly outside the standard domestic FAA categorization used to build our <code>airports</code> table, they show up as missing values in our join.</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="`dplyr::anti_join()` Pattern">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span><code>dplyr::anti_join()</code> Pattern
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The query above — a <code>LEFT JOIN</code> followed by a filter for <code>IS NULL</code> on the right-hand table — is common enough to have its own name: an <strong>anti-join</strong>. It answers the question “which rows in the first table have <strong>no match at all</strong> in the second table?” This is exactly what <code>dplyr::anti_join()</code> does in one step:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># equivalent query using dplyr's anti_join()</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co"># please do not execute the following code, this will crash your machine</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>flights <span class="sc">|&gt;</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a> <span class="fu">anti_join</span>(airports, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"dest"</span> <span class="ot">=</span> <span class="st">"faa"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a> <span class="fu">select</span>(year, month, day, origin, <span class="at">dest_name =</span> name, flight, carrier)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Under the hood, <code>dplyr::anti_join()</code> is implemented using this same left-join-plus-filter logic. Recognizing the pattern is useful because anti-joins come up constantly in real data work: finding orders with no matching customer record, students with no matching enrollment record, or — as here — destination codes with no matching airport record.</p>
+</div>
+</div>
 <div class="callout callout-style-default callout-note callout-titled" title="Handling Missing Values in `SQL`">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -1491,13 +1539,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Users of <code>R</code> are used to <code>NA</code> and functions like <code>is.na()</code>. <code>SQL</code> has a related but stricter concept: <code>NULL</code>, representing an <strong>unknown or missing value</strong>. The critical difference is that <code>NULL</code> cannot be compared using the standard <code>=</code> operator. A test like <code>a.name = NULL</code> does not evaluate to <code>TRUE</code> or <code>FALSE</code> — it evaluates to <code>UNKNOWN</code>, and rows where this happens are silently excluded from the result, with no error raised. To correctly test for missing values, <code>SQL</code> provides the dedicated keywords <code>IS NULL</code> and <code>IS NOT NULL</code>.</p>
 <p>Notice the difference in the <code>WHERE</code> clause between the queries above and below..</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="dt">year</span>, <span class="dt">month</span>, <span class="dt">day</span>, origin, dest,</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>      a.name <span class="kw">AS</span> dest_name,</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>      flight, carrier</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights <span class="kw">AS</span> f</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="kw">LEFT</span> <span class="kw">JOIN</span> airports <span class="kw">AS</span> a <span class="kw">ON</span> f.dest <span class="op">=</span> a.faa</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> a.name <span class="op">=</span> <span class="kw">NULL</span></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="dt">year</span>, <span class="dt">month</span>, <span class="dt">day</span>, origin, dest,</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>      a.name <span class="kw">AS</span> dest_name,</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>      flight, carrier</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights <span class="kw">AS</span> f</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="kw">LEFT</span> <span class="kw">JOIN</span> airports <span class="kw">AS</span> a <span class="kw">ON</span> f.dest <span class="op">=</span> a.faa</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> a.name <span class="op">=</span> <span class="kw">NULL</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top">
 <caption>0 records</caption>
@@ -1521,25 +1569,161 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </section>
+<section id="right-join" class="level3" data-number="3.2.3">
+<h3 data-number="3.2.3" class="anchored" data-anchor-id="right-join"><span class="header-section-number">3.2.3</span> <code>RIGHT JOIN</code></h3>
+<p><code>RIGHT JOIN</code> is simply the mirror image of <code>LEFT JOIN</code>: it keeps all rows from the table on the <strong>right</strong> side of the join, along with matching rows from the table on the left. In fact, any <code>RIGHT JOIN</code> can be rewritten as an equivalent <code>LEFT JOIN</code> just by swapping the order of the two tables — and vice versa. The results of the <code>LEFT JOIN</code> query above and the <code>RIGHT JOIN</code> query below are identical.</p>
+<p>Because of this symmetry, most <code>SQL</code> style guides recommend sticking to <code>LEFT JOIN</code> for consistency and simply reordering tables as needed, rather than mixing <code>LEFT</code> and <code>RIGHT</code> in the same project. This is also why <code>dplyr</code> provides <code>right_join()</code> mainly for completeness — in practice, most <code>R</code> users express the same logic with <code>left_join()</code> and swap the table order instead.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- same result as our LEFT JOIN example above, but written as a RIGHT JOIN</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- with the tables swapped</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="dt">year</span>, <span class="dt">month</span>, <span class="dt">day</span>, origin, dest,</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>      a.name <span class="kw">AS</span> dest_name,</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>      flight, carrier</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> airports <span class="kw">AS</span> a</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="kw">RIGHT</span> <span class="kw">JOIN</span> flights <span class="kw">AS</span> f <span class="kw">ON</span> f.dest <span class="op">=</span> a.faa</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> a.name <span class="kw">IS</span> <span class="kw">NULL</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Displaying records 1 - 10</caption>
+<thead>
+<tr class="header">
+<th style="text-align: right;">year</th>
+<th style="text-align: right;">month</th>
+<th style="text-align: right;">day</th>
+<th style="text-align: left;">origin</th>
+<th style="text-align: left;">dest</th>
+<th style="text-align: left;">dest_name</th>
+<th style="text-align: right;">flight</th>
+<th style="text-align: left;">carrier</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">JFK</td>
+<td style="text-align: left;">SJU</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: right;">1403</td>
+<td style="text-align: left;">B6</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">JFK</td>
+<td style="text-align: left;">BQN</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: right;">939</td>
+<td style="text-align: left;">B6</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">FLL</td>
+<td style="text-align: left;">SJU</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: right;">953</td>
+<td style="text-align: left;">B6</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">MCO</td>
+<td style="text-align: left;">SJU</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: right;">933</td>
+<td style="text-align: left;">B6</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">MIA</td>
+<td style="text-align: left;">SJU</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: right;">1341</td>
+<td style="text-align: left;">AA</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">SJU</td>
+<td style="text-align: left;">STT</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: right;">1236</td>
+<td style="text-align: left;">B6</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">JFK</td>
+<td style="text-align: left;">SJU</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: right;">315</td>
+<td style="text-align: left;">DL</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">JFK</td>
+<td style="text-align: left;">SJU</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">B6</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">EWR</td>
+<td style="text-align: left;">SJU</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: right;">1289</td>
+<td style="text-align: left;">B6</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">EWR</td>
+<td style="text-align: left;">SJU</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: right;">1216</td>
+<td style="text-align: left;">UA</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
 </section>
 <section id="unions-vertical-integration" class="level2" data-number="3.3">
 <h2 data-number="3.3" class="anchored" data-anchor-id="unions-vertical-integration"><span class="header-section-number">3.3</span> Unions (Vertical Integration)</h2>
 <p>While joins add columns to our result set, set operations add rows. <code>UNION</code> allows us to append the results of one query directly beneath the results of another, much like <code>dplyr::bind_rows()</code>.</p>
 <p>Let us extract a dataset combining all flights that flew from ATW to MSP on April 6, 2013, with all flights that flew from JFK to ORD on the same day.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- extract all flights that flew from ATW to MSP and from JFK to ORD on April 6, 2013</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>(<span class="kw">SELECT</span> <span class="dt">year</span>, <span class="dt">month</span>, <span class="dt">day</span>, origin, dest, flight, carrier</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> <span class="dt">year</span> <span class="op">=</span> <span class="dv">2013</span> <span class="kw">AND</span> <span class="dt">month</span> <span class="op">=</span> <span class="dv">4</span> <span class="kw">AND</span> <span class="dt">day</span> <span class="op">=</span> <span class="dv">6</span> <span class="kw">AND</span> origin <span class="op">=</span> <span class="st">'ATW'</span> <span class="kw">AND</span> dest <span class="op">=</span> <span class="st">'MSP'</span>)</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="kw">UNION</span></span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>(<span class="kw">SELECT</span> <span class="dt">year</span>, <span class="dt">month</span>, <span class="dt">day</span>, origin, dest, flight, carrier</span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> <span class="dt">year</span> <span class="op">=</span> <span class="dv">2013</span> <span class="kw">AND</span> <span class="dt">month</span> <span class="op">=</span> <span class="dv">4</span> <span class="kw">AND</span> <span class="dt">day</span> <span class="op">=</span> <span class="dv">6</span> <span class="kw">AND</span> origin <span class="op">=</span> <span class="st">'JFK'</span> <span class="kw">AND</span> dest <span class="op">=</span> <span class="st">'ORD'</span>)</span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- extract all flights that flew from ATW to MSP and from JFK to ORD on April 6, 2013</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>(<span class="kw">SELECT</span> <span class="dt">year</span>, <span class="dt">month</span>, <span class="dt">day</span>, origin, dest, flight, carrier</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> <span class="dt">year</span> <span class="op">=</span> <span class="dv">2013</span> <span class="kw">AND</span> <span class="dt">month</span> <span class="op">=</span> <span class="dv">4</span> <span class="kw">AND</span> <span class="dt">day</span> <span class="op">=</span> <span class="dv">6</span> <span class="kw">AND</span> origin <span class="op">=</span> <span class="st">'ATW'</span> <span class="kw">AND</span> dest <span class="op">=</span> <span class="st">'MSP'</span>)</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="kw">UNION</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>(<span class="kw">SELECT</span> <span class="dt">year</span>, <span class="dt">month</span>, <span class="dt">day</span>, origin, dest, flight, carrier</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> <span class="dt">year</span> <span class="op">=</span> <span class="dv">2013</span> <span class="kw">AND</span> <span class="dt">month</span> <span class="op">=</span> <span class="dv">4</span> <span class="kw">AND</span> <span class="dt">day</span> <span class="op">=</span> <span class="dv">6</span> <span class="kw">AND</span> origin <span class="op">=</span> <span class="st">'JFK'</span> <span class="kw">AND</span> dest <span class="op">=</span> <span class="st">'ORD'</span>)</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>8 records</caption>
@@ -1648,6 +1832,103 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 </div>
 </div>
+<p><code>UNION</code> is only one of three standard set operations available in <code>SQL</code>. The other two — <code>INTERSECT</code> and <code>EXCEPT</code> — follow the exact same syntax rules (each side must be a complete <code>SELECT</code> statement with matching columns and types), but combine rows differently:</p>
+<ul>
+<li><strong><code>INTERSECT</code></strong> keeps only the rows that appear in <strong>both</strong> result sets — analogous to <code>dplyr::intersect()</code>.</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- destinations served from ORD in 2013 that were ALSO served in 2015</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- (INTERSECT keeps only rows that appear in BOTH result sets)</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>(<span class="kw">SELECT</span> <span class="kw">DISTINCT</span> dest <span class="kw">FROM</span> flights <span class="kw">WHERE</span> origin <span class="op">=</span> <span class="st">'ORD'</span> <span class="kw">AND</span> <span class="dt">year</span> <span class="op">=</span> <span class="dv">2013</span>)</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="kw">INTERSECT</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>(<span class="kw">SELECT</span> <span class="kw">DISTINCT</span> dest <span class="kw">FROM</span> flights <span class="kw">WHERE</span> origin <span class="op">=</span> <span class="st">'ORD'</span> <span class="kw">AND</span> <span class="dt">year</span> <span class="op">=</span> <span class="dv">2015</span>);</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Displaying records 1 - 10</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">dest</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">PHX</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MIA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">IAH</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CLT</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DFW</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">IAD</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LGA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">DCA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">JAX</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PHL</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<ul>
+<li><strong><code>EXCEPT</code></strong> keeps rows from the first result set that do <strong>not</strong> appear in the second — analogous to <code>dplyr::setdiff()</code>.</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- destinations served from ORD in 2013 that were NOT served in 2015</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- (EXCEPT keeps rows from the first result set that do NOT appear in the second)</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>(<span class="kw">SELECT</span> <span class="kw">DISTINCT</span> dest <span class="kw">FROM</span> flights <span class="kw">WHERE</span> origin <span class="op">=</span> <span class="st">'ORD'</span> <span class="kw">AND</span> <span class="dt">year</span> <span class="op">=</span> <span class="dv">2013</span>)</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="kw">EXCEPT</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>(<span class="kw">SELECT</span> <span class="kw">DISTINCT</span> dest <span class="kw">FROM</span> flights <span class="kw">WHERE</span> origin <span class="op">=</span> <span class="st">'ORD'</span> <span class="kw">AND</span> <span class="dt">year</span> <span class="op">=</span> <span class="dv">2015</span>);</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>3 records</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">dest</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">ART</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MSO</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LAR</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The two queries above ask complementary questions about Chicago O’Hare’s route network: which destinations were served in both 2013 and 2015 (<code>INTERSECT</code>), and which destinations were served in 2013 but dropped by 2015 (<code>EXCEPT</code>).</p>
+<p>Together with <code>UNION</code>, these three operations round out our vertical-integration toolkit:</p>
+<ul>
+<li><code>UNION</code> stacks rows together,</li>
+<li><code>INTERSECT</code> finds their overlap, and</li>
+<li><code>EXCEPT</code> finds their difference.</li>
+</ul>
 </section>
 <section id="subqueries" class="level2" data-number="3.4">
 <h2 data-number="3.4" class="anchored" data-anchor-id="subqueries"><span class="header-section-number">3.4</span> Subqueries</h2>
@@ -1655,18 +1936,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>We do this using subqueries. A <strong>subquery</strong> is simply a complete <code>SELECT</code> statement wrapped in parentheses and placed inside the <code>FROM</code> or <code>WHERE</code> clause of a parent query.</p>
 <p>Let us return to the <code>UNION</code> query we just wrote above. What if we don’t want to see the rows, but rather we just want a count of the total number of flights across both of those specific routes? We can wrap the entire <code>UNION</code> in parentheses and run a <code>COUNT(*)</code> over it.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- count the number of flights that satisfy the criteria above</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> num_flights</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> </span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>((<span class="kw">SELECT</span> <span class="dt">year</span>, <span class="dt">month</span>, <span class="dt">day</span>, origin, dest, flight, carrier</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> <span class="dt">year</span> <span class="op">=</span> <span class="dv">2013</span> <span class="kw">AND</span> <span class="dt">month</span> <span class="op">=</span> <span class="dv">4</span> <span class="kw">AND</span> <span class="dt">day</span> <span class="op">=</span> <span class="dv">6</span> <span class="kw">AND</span> origin <span class="op">=</span> <span class="st">'ATW'</span> <span class="kw">AND</span> dest <span class="op">=</span> <span class="st">'MSP'</span>)</span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="kw">UNION</span></span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>(<span class="kw">SELECT</span> <span class="dt">year</span>, <span class="dt">month</span>, <span class="dt">day</span>, origin, dest, flight, carrier</span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> <span class="dt">year</span> <span class="op">=</span> <span class="dv">2013</span> <span class="kw">AND</span> <span class="dt">month</span> <span class="op">=</span> <span class="dv">4</span> <span class="kw">AND</span> <span class="dt">day</span> <span class="op">=</span> <span class="dv">6</span> <span class="kw">AND</span> origin <span class="op">=</span> <span class="st">'JFK'</span> <span class="kw">AND</span> dest <span class="op">=</span> <span class="st">'ORD'</span>)</span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>) <span class="kw">AS</span> temp_subquery;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- count the number of flights that satisfy the criteria above</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> num_flights</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> </span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>((<span class="kw">SELECT</span> <span class="dt">year</span>, <span class="dt">month</span>, <span class="dt">day</span>, origin, dest, flight, carrier</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> <span class="dt">year</span> <span class="op">=</span> <span class="dv">2013</span> <span class="kw">AND</span> <span class="dt">month</span> <span class="op">=</span> <span class="dv">4</span> <span class="kw">AND</span> <span class="dt">day</span> <span class="op">=</span> <span class="dv">6</span> <span class="kw">AND</span> origin <span class="op">=</span> <span class="st">'ATW'</span> <span class="kw">AND</span> dest <span class="op">=</span> <span class="st">'MSP'</span>)</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="kw">UNION</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>(<span class="kw">SELECT</span> <span class="dt">year</span>, <span class="dt">month</span>, <span class="dt">day</span>, origin, dest, flight, carrier</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> <span class="dt">year</span> <span class="op">=</span> <span class="dv">2013</span> <span class="kw">AND</span> <span class="dt">month</span> <span class="op">=</span> <span class="dv">4</span> <span class="kw">AND</span> <span class="dt">day</span> <span class="op">=</span> <span class="dv">6</span> <span class="kw">AND</span> origin <span class="op">=</span> <span class="st">'JFK'</span> <span class="kw">AND</span> dest <span class="op">=</span> <span class="st">'ORD'</span>)</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>) <span class="kw">AS</span> temp_subquery;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>1 records</caption>
@@ -1696,14 +1977,162 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>When we place a subquery inside a <code>FROM</code> clause, we are essentially creating a temporary table on the fly (often called a <strong>derived table</strong>). In <code>MySQL</code> and <code>MariaDB</code>, every derived table must have its own alias, even if we never explicitly refer to that alias in the <code>SELECT</code> statement. Notice the <code>AS temp_subquery</code> at the very end of our code block; without it, the <code>SQL</code> engine would throw a syntax error.</p>
 </div>
 </div>
+<p>The subquery in our previous example was used as a <strong>derived table</strong> — it stood in for an entire table in the <code>FROM</code> clause. Subqueries have a second, equally common use: appearing inside a <code>WHERE</code> clause to filter rows based on the result of another query.</p>
+<p>In the following example, the <strong>inner</strong> query runs first, independently, and returns a list of carrier codes whose full name contains the word “Airlines” (using the <code>LIKE</code> operator together with the <code>%</code> wildcard, which matches any sequence of characters). The <strong>outer</strong> query then uses <code>IN</code> to keep only <code>flights</code> rows whose <code>carrier</code> appears in that list.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- flights operated by any carrier whose name contains "Airlines"</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="dt">year</span>, <span class="dt">month</span>, <span class="dt">day</span>, origin, dest, carrier, flight</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> flights</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> carrier <span class="kw">IN</span> (</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span> carrier</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> carriers</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">WHERE</span> name <span class="kw">LIKE</span> <span class="st">'%Airlines%'</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Displaying records 1 - 10</caption>
+<thead>
+<tr class="header">
+<th style="text-align: right;">year</th>
+<th style="text-align: right;">month</th>
+<th style="text-align: right;">day</th>
+<th style="text-align: left;">origin</th>
+<th style="text-align: left;">dest</th>
+<th style="text-align: left;">carrier</th>
+<th style="text-align: right;">flight</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">LAX</td>
+<td style="text-align: left;">DFW</td>
+<td style="text-align: left;">AA</td>
+<td style="text-align: right;">2400</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">SFO</td>
+<td style="text-align: left;">DFW</td>
+<td style="text-align: left;">AA</td>
+<td style="text-align: right;">1052</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">SEA</td>
+<td style="text-align: left;">ORD</td>
+<td style="text-align: left;">AA</td>
+<td style="text-align: right;">2392</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">ANC</td>
+<td style="text-align: left;">SEA</td>
+<td style="text-align: left;">AS</td>
+<td style="text-align: right;">108</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">LAX</td>
+<td style="text-align: left;">DFW</td>
+<td style="text-align: left;">AA</td>
+<td style="text-align: right;">2406</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">ANC</td>
+<td style="text-align: left;">PDX</td>
+<td style="text-align: left;">AS</td>
+<td style="text-align: right;">122</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">FAI</td>
+<td style="text-align: left;">SEA</td>
+<td style="text-align: left;">AS</td>
+<td style="text-align: right;">128</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">ANC</td>
+<td style="text-align: left;">SEA</td>
+<td style="text-align: left;">AS</td>
+<td style="text-align: right;">146</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">LAS</td>
+<td style="text-align: left;">HNL</td>
+<td style="text-align: left;">HA</td>
+<td style="text-align: right;">17</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">ANC</td>
+<td style="text-align: left;">SEA</td>
+<td style="text-align: left;">AS</td>
+<td style="text-align: right;">94</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Conceptually, this is similar to first running <code>carriers |&gt; filter(str_detect(name, "Airlines")) |&gt; pull(carrier)</code> in <code>R</code>, and then using the result inside a <code>flights |&gt; filter(carrier %in% ...)</code> call — except <code>SQL</code> performs both steps as a single query sent to the server.</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="A Helpful Mental Model">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>A Helpful Mental Model
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A <code>FROM</code>-clause subquery builds a <strong>temporary table</strong>; a <code>WHERE</code>-clause subquery builds a <strong>temporary list of values</strong> to filter against.</p>
+</div>
+</div>
 </section>
-<section id="terminate-connection" class="level2" data-number="3.5">
-<h2 data-number="3.5" class="anchored" data-anchor-id="terminate-connection"><span class="header-section-number">3.5</span> terminate connection</h2>
+<section id="which-joinset-operationsubquery-to-use" class="level2" data-number="3.5">
+<h2 data-number="3.5" class="anchored" data-anchor-id="which-joinset-operationsubquery-to-use"><span class="header-section-number">3.5</span> which join/set operation/subquery to use?</h2>
+<p>In this chapter, we have been introduced to several distinct ways of combining data across tables and queries. As with the three <code>SQL</code>-in-<code>R</code> methods from Chapter 2, a short decision guide is more useful in practice than memorizing definitions:</p>
+<ul>
+<li><p><strong>Use an <code>INNER JOIN</code></strong> when we only want rows that have a match in both tables — for example, flights whose destination airport is known.</p></li>
+<li><p><strong>Use a <code>LEFT JOIN</code></strong> when we want to keep every row from your primary table regardless of whether a match exists — and especially when <strong>auditing</strong> for missing or unmatched data (our anti-join example above).</p></li>
+<li><p><strong>Use <code>UNION</code> / <code>UNION ALL</code></strong> when we are stacking comparable rows from two or more separately filtered queries into one result set.</p></li>
+<li><p><strong>Use <code>INTERSECT</code> or <code>EXCEPT</code></strong> when our question is about <strong>overlap</strong> or <strong>difference</strong> between two sets of values, rather than about combining full rows.</p></li>
+<li><p><strong>Use a subquery</strong> when a question genuinely requires two passes over the data — first computing an intermediate result, then filtering or aggregating based on it — and a single <code>WHERE</code>/<code>GROUP BY</code>/<code>HAVING</code> combination cannot express the logic directly.</p></li>
+</ul>
+<p>As our queries grow more complex, we will often combine several of these tools in a single analysis: joining tables to bring in descriptive names, filtering with a subquery, and aggregating the result — much as we did across the above sections.</p>
+</section>
+<section id="terminate-connection" class="level2" data-number="3.6">
+<h2 data-number="3.6" class="anchored" data-anchor-id="terminate-connection"><span class="header-section-number">3.6</span> terminate connection</h2>
 <p>As always, we conclude our workflow by responsibly closing our database connections to free up memory on both our local machine and the remote server.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># terminate the SQL connection</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbDisconnect</span>(con_air, <span class="at">shutdown =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># terminate the SQL connection</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbDisconnect</span>(con_air, <span class="at">shutdown =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 
 
