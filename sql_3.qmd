@@ -7,7 +7,7 @@ execute:
   cache: false
 ---
 
-In our previous chapters, we focused on extracting and aggregating data from a single table. However, the defining feature of a **relational database** is that data is deliberately distributed across multiple tables. This design principle, known as **normalization**, eliminates data redundancy, saves storage space, and ensures data integrity. 
+In our previous chapters, we focused on extracting and aggregating data from a single table. However, the defining feature of a **relational database** is that data are deliberately distributed across multiple tables. This design principle, known as **normalization**, eliminates data redundancy, saves storage space, and ensures data integrity. 
 
 For example, instead of repeating the full name of an airline on every single row of the `flights` dataset, the `flights` table only stores a brief carrier code (e.g., "DL"). If we want the full name ("Delta Air Lines Inc."), we must link the `flights` table to the `carriers` table. 
 
@@ -30,20 +30,20 @@ library(dbplyr)
 
 
 ```{r}
-# access airlines database
-
+# connect to the airlines database
 con_air <- mdsr::dbConnect_scidb("airlines")
 
-DBI::dbListTables(con_air)   # list tables in database
+# list tables in database
+DBI::dbListTables(con_air)   
 
 ```
 
 
-We will create our standard lazy pointers for the three tables we will analyze in this chapter: `flights`, `carriers`, and `airports`.
+We will create our standard lazy pointers for the three tables we will work with in this chapter: `flights`, `carriers`, and `airports`.
 
 
 ```{r}
-# access tables from the airlines database
+# reference to tables from the airlines database
 
 flights <- dplyr::tbl(con_air, "flights")
 
@@ -54,13 +54,16 @@ airports <- dplyr::tbl(con_air, "airports")
 ```
 
 
-Before joining tables, it is standard practice to examine their schemas using the `DESCRIBE` command. We must identify the **keys** — the columns that exist in both tables and will serve as our connective tissue.
+Before joining tables, it is standard practice to examine their schemas using the `DESCRIBE` command and glimpse their fields and entries. We must identify the **keys** — the columns/fields that exist in both tables and will serve as our connective tissue.
 
 ### `flights` table
 
 
 ```{sql}
 --| connection: con_air
+
+-- NOTE - there are more fields than are displayed below
+-- see the displayed rows below
 
 DESCRIBE flights;
 
@@ -128,11 +131,11 @@ The `MySQL` dialect supports several types of joins, which translate directly to
 * **CROSS JOIN** - Returns the Cartesian product of rows from both tables. (Rarely used in standard data science workflows as it generates massive output).
 
 ::: {.callout-note title="The Missing FULL JOIN"}
-Notice that `FULL JOIN` (equivalent to `R`'s `full_join()`) is missing from this list. `MySQL` and `MariaDB` do not natively support full outer joins. If we were using `PostgreSQL` or `DuckDB`, `FULL OUTER JOIN` would be available. In `MySQL`, we have to construct a full join manually by taking a `LEFT JOIN` and combining it with a `RIGHT JOIN` using a `UNION`.
+Notice that `FULL JOIN` (equivalent to `R`'s `dplyr::full_join()`) is missing from this list. `MySQL` and `MariaDB` do not natively support full outer joins. If we were using `PostgreSQL` or `DuckDB`, `FULL OUTER JOIN` would be available. In `MySQL`, we have to construct a full join manually by taking a `LEFT JOIN` and combining it with a `RIGHT JOIN` using a `UNION`.
 :::
 
 
-### `INNER JOIN`
+### `JOIN`(technically an `INNER JOIN`)
 
 Suppose we want to access the full airport names for all flights that flew out of Appleton (ATW) in 2013. The flights table contains the destination code (`dest`), and the airports table contains the destination code (`faa`) alongside the full name.
 
@@ -183,6 +186,8 @@ flights |>
 Data architectures often require us to chain **multiple joins** together to assemble a complete picture. What if we want the full names of the origin airport, the destination airport, and the carrier?
 
 Because we need airport names for both the origin and the destination, we must join the `airports` table to our query twice. To do this, we must give the `airports` table two distinct aliases.
+
+The carrier names come from the `carriers` table.
 
 
 ```{sql}
@@ -251,7 +256,7 @@ Under the hood, `dplyr::anti_join()` is implemented using this same left-join-pl
 ::: {.callout-note title="Handling Missing Values in `SQL`"}
 Users of `R` are used to `NA` and functions like `is.na()`. `SQL` has a related but stricter concept: `NULL`, representing an **unknown or missing value**. The critical difference is that `NULL` cannot be compared using the standard `=` operator. A test like `a.name = NULL` does not evaluate to `TRUE` or `FALSE` — it evaluates to `UNKNOWN`, and rows where this happens are silently excluded from the result, with no error raised. To correctly test for missing values, `SQL` provides the dedicated keywords `IS NULL` and `IS NOT NULL`. 
 
-Notice the difference in the `WHERE` clause between the queries above and below..
+Notice the difference in the `WHERE` clause statement and the resulting output between the queries above and below.
 
 ```{sql}
 --| connection: con_air
@@ -324,7 +329,7 @@ LIMIT 10;
 ::: {.callout-warning title="Union Edge Cases"}
 When using `UNION`, we must be aware of two strict database rules:
 
-* **Column Matching**: Unlike `R`'s `bind_rows()`, which politely aligns columns by their names and fills in `NA`s where they don't match, `SQL` `UNION` does not check column names. It blindly stacks the tables based on the number of columns and their data types. If query A returns a string in column 1, and query B returns an integer in column 1, the query will fail.
+* **Column Matching**: Unlike `R`'s `dplyr::bind_rows()`, which politely aligns columns by their names and fills in `NA`s where they don't match, `SQL` `UNION` does not check column names. It blindly stacks the tables based on the number of columns and their data types. If query A returns a string in column 1, and query B returns an integer in column 1, the query will fail.
 
 * **Deduplication**: By default, `UNION` removes exact duplicate rows from the final result set. Searching for and removing duplicates is computationally expensive. If we know our datasets are mutually exclusive (as they are above) or if we want to retain duplicates, we should use `UNION ALL`, which simply appends the rows and executes much faster.
 
