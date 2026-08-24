@@ -18,9 +18,16 @@ if (file.exists("snl_db")) {
 }
 ```
 
-In our previous chapters, we operated strictly as consumers of data. We connected to a remote, read-only database and executed queries to extract and aggregate information. However, complete data science workflows frequently require us to be data architects. We must ingest raw, unstructured data from flat files, define a rigid structure for it, and build our own relational databases from scratch.
+In our previous chapters, we operated strictly as consumers of data. We connected to a remote, read-only database and executed queries to extract and aggregate information. However, complete data science workflows frequently require us to be **data architects**. We must ingest raw, unstructured data from flat files, define a rigid structure for it, and build our own relational databases from scratch.
 
-In this chapter, we transition from querying existing systems to architecting our own. To do this, we will use `duckdb`, an in-process `SQL` database management system. Unlike traditional client-server databases (like `MySQL` or `PostgreSQL`) that require external servers and complex authentication, `DuckDB` runs entirely within our local `R` environment. It is highly optimized for analytical queries on our local machines, bridging the gap between massive server-side databases and local data frames.
+In this chapter, we transition from querying existing systems to architecting our own. To do this, we will use `DuckDB`, an in-process `SQL` database management system. Unlike traditional client-server databases (like `MySQL` or `PostgreSQL`) that require external servers and complex authentication, `DuckDB` runs entirely within our local `R` environment. It is highly optimized for analytical queries on our local machines, bridging the gap between massive server-side databases and local data frames.
+
+::: {.callout-note title="Why `DuckDB`?"}
+It is worth briefly noting **why** we reach for `DuckDB` here rather than `MySQL`/`MariaDB`, which we used in Chapters 1–3. Traditional database systems like `MySQL` are typically optimized for **OLTP** workloads (**Online Transaction Processing**) — many small, simultaneous reads and writes, such as a website processing thousands of individual customer orders per second. `DuckDB`, by contrast, is optimized for **OLAP** workloads (**Online Analytical Processing**) — the kind of work data scientists do most often: scanning, filtering, and aggregating large columns of data all at once. This design makes `DuckDB` an excellent fit for the local, single-user, analysis-heavy work data scientists typically do (and the goals of this course), even though it is not what a production web application would typically use to manage live transactions.
+
+For more information, see [this](https://dl.acm.org/doi/10.1145/3299869.3320212).
+:::
+
 
 
 ## load packages and connect to database server
@@ -143,7 +150,7 @@ USE snl_db;
 
 
 ```{sql connection="con_snl"}
--- step 2: Clear any existing table to ensure reproducibility
+-- step 2: clear any existing table to ensure reproducibility
 
 DROP TABLE IF EXISTS casts;
 
@@ -170,6 +177,9 @@ CREATE TABLE casts (
 ```
 
 
+Notice that our schema does not treat every column the same way. Columns that participate in our `PRIMARY KEY` (`aid` and `sid`) are declared `NOT NULL`, because a primary key's entire purpose is to uniquely identify a row — a `NULL` value there would be meaningless. Since `aid` is a string, we give it a harmless default of `' '` (a blank space) in case a row is ever inserted without one. Columns like `first_epid` and `last_epid`, on the other hand, are allowed to be `NULL` (via `DEFAULT NULL`), because a missing first or last episode ID is a legitimate, meaningful piece of information — it tells us, for instance, that a cast member's tenure end date simply was not recorded. In other words: `NOT NULL` with a default is appropriate for columns where **every row must have a value**, while allowing `NULL` is appropriate for columns where **missingness itself is meaningful data**. This is a design decision, not a formality — thinking it through carefully for each column is part of building a trustworthy schema.
+
+
 ::: {.callout-tip title="Composite Primary Keys"}
 Notice that our `PRIMARY KEY` is composed of two columns: (`sid`, `aid`). This is known as a **composite key**. It means that while a single actor (`aid`) might appear multiple times in the table, and a single season (`sid`) contains multiple actors, the combination of a specific actor in a specific season will only ever appear exactly once.
 :::
@@ -184,6 +194,14 @@ COPY casts FROM 'casts.csv' (FORMAT CSV, HEADER, NULL 'NA');
 
 ```
 
+
+::: {.callout-note title="The `NULL 'NA'` Piece"}
+Let's look closely at the `COPY` statement above: `NULL 'NA'`. 
+
+This tells `DuckDB` that whenever it encounters the literal text `"NA"` inside `casts.csv`, it should interpret that as a true `SQL` `NULL` — not as the two-character string `"NA"`. This matters because `R`'s `readr::write_csv()` writes missing values out as the string `"NA"` by default (see `summary(casts)` and `glimpse(casts)` above). Without this argument, `DuckDB` would happily import `"NA"` as literal text, silently corrupting any numeric column that contains missing values and breaking the very `IS NULL` filtering behavior we relied on throughout Chapter 3 (recall the "Handling Missing Values in `SQL`" note there). 
+
+Whenever we import data that originated in `R`, we need to always double check how our source file represents missing values, and make sure our `COPY` (or, `LOAD DATA`) statement is told to interpret it correctly.
+:::
 
 
 ## checks
@@ -206,12 +224,27 @@ SHOW TABLES;
 ```
 
 
+Let's make sure the dataset columns (or, table fields) have been imported correctly.
+
 ```{sql connection="con_snl"}
 -- review the strict schema we defined
+-- fields/columns should match between the .csv file above and the database table
 
 DESCRIBE casts;
 ```
 
+
+Additionally, `casts.csv` had `r nrow(casts)` when we imported the dataset into `R`. Let's check for the number of rows in the database table.
+
+```{sql connection="con_snl"}
+-- should match with the .csv file
+
+SELECT COUNT(*) AS num_rows FROM casts;
+
+```
+
+
+Finally, let's preview the first 10 rows.
 
 ```{sql connection="con_snl"}
 -- peek at the ingested data
@@ -221,6 +254,42 @@ SELECT * FROM casts LIMIT 10;
 ```
 
 
+If any of these results disagree or looks unexpected, that is an immediate signal to investigate the import step before proceeding with any analysis.
+
+
+## `INSERT INTO` for adding a single row
+
+`COPY` (and, later, `duckdb_read_csv()`) are designed for **bulk** ingestion — thousands of rows at once from a flat file. But we don't always have a whole file to import; sometimes we simply need to add one new record to an existing table. The `INSERT INTO` statement handles exactly this case. 
+
+We list the columns we are populating, followed by a `VALUES` clause supplying one value per column, in the same order. Notice that `last_epid` is explicitly set to `NULL`, consistent with our schema's decision (see above) that a missing episode ID is meaningful, permitted data rather than an error.
+
+
+```{sql connection="con_snl"}
+-- manually add a single new row to the casts table
+
+INSERT INTO casts (aid, sid, featured, first_epid, last_epid, 
+                   update_anchor, n_episodes, season_fraction)
+                   
+VALUES ('Test Cast Member', 47, TRUE, 20250927, NULL, FALSE, 1, 1.0);
+```
+
+
+```{sql connection="con_snl"}
+-- confirm the row was added
+
+SELECT * FROM casts WHERE aid = 'Test Cast Member';
+```
+
+
+```{sql connection="con_snl"}
+-- should have an additional row
+
+SELECT COUNT(*) AS num_rows FROM casts;
+
+```
+
+
+`INSERT INTO` is worth knowing conceptually even though most of our work in this course involves bulk imports: it is the operation a live application would use every time a single new record — a new order, a new user, a new cast member — needs to be added to a running database.
 
 
 ## shortcut - a fast (but fragile) route
@@ -269,7 +338,17 @@ DESCRIBE episodes;
 
 
 ```{sql connection="con_snl"}
+-- should match with the .csv file (see glimpse() result above)
+
+SELECT COUNT(*) AS num_rows FROM episodes;
+
+```
+
+
+```{sql connection="con_snl"}
+
 SELECT * FROM episodes LIMIT 10;
+
 ```
 
 
@@ -279,6 +358,78 @@ While functions like `duckdb_read_csv()` are incredibly useful for rapid prototy
 In rigorous data engineering contexts, we must demonstrate mastery over data integrity by explicitly writing `CREATE TABLE` schemas. We must dictate the rules, rather than relying on an algorithm to guess them.
 
 :::
+
+## additional notes
+
+### `ALTER TABLE` 
+
+Database schemas are rarely finished on the first attempt. `ALTER TABLE` lets us modify a table's structure after it has already been created — adding a column, dropping one, or changing a data type — without having to drop and rebuild the entire table from scratch. 
+
+Below, we add a new, currently empty `season_number` column to our `episodes` table; in practice we would follow this with an `UPDATE` statement (or a fresh import) to populate it.
+
+```{sql connection="con_snl"}
+-- add a new column to an existing table after the fact
+
+ALTER TABLE episodes ADD COLUMN season_number INTEGER;
+
+```
+
+```{sql connection="con_snl"}
+-- confirm the new column was added
+
+DESCRIBE episodes;
+
+```
+
+
+### `FOREIGN KEY`
+
+Beyond **primary keys**, well-designed relational databases also declare **foreign keys**: columns in one table that reference the primary key of another, formally encoding the relationships we relied on informally throughout Chapter 3. 
+
+Our `casts` and `episodes` tables are linked by `sid` (season ID). Had we anticipated this relationship when creating `episodes`, we could have declared it explicitly:
+
+```{sql connection="con_snl"}
+--| eval: false
+
+-- example schema showing how a FOREIGN KEY would be declared
+-- (illustrative -- run this only if creating the episodes table fresh)
+
+CREATE TABLE episodes (
+  sid INTEGER NOT NULL,
+  epid INTEGER NOT NULL,
+  aired VARCHAR(255),
+  epno SMALLINT,
+  PRIMARY KEY (epid),
+  FOREIGN KEY (sid) REFERENCES casts(sid)
+);
+
+```
+
+
+A `FOREIGN KEY` constraint does more than document intent — it actively protects data integrity. With this constraint in place, the database would refuse to insert an `episodes` row whose `sid` does not already exist somewhere in `casts`, preventing exactly the kind of "orphaned" record we went looking for with anti-joins in Chapter 3. 
+
+Declaring foreign keys is what formally establishes a database as **relational**: it is the schema-level guarantee that makes joining tables together a meaningful, trustworthy operation rather than a coincidence of matching column values.
+
+Now that both `casts` and `episodes` exist in our database, we can put Chapter 3's join skills to direct use on data we built ourselves — closing the loop between architecting a database and querying one.
+
+```{sql connection="con_snl"}
+-- for a given cast member, list every episode they appeared in, with the air date
+
+SELECT c.aid, e.sid, e.epno, e.aired
+FROM casts AS c
+JOIN episodes AS e ON c.sid = e.sid
+WHERE c.aid = 'Sasheer Zamata'
+ORDER BY e.aired
+LIMIT 10;
+
+```
+
+
+
+
+## closing notes
+
+This chapter opened by drawing a line between two roles: **consumer** of data, querying systems built by someone else (in Chapters 2 and 3), and **architect** of data, designing the systems from scratch (in Chapter 4 here). In practice, that line is rarely so sharp. A data scientist who imports a raw `.csv` today is often the same person who will write `JOIN`s and `GROUP BY`s against that very table tomorrow — the schema decisions we make here directly shape which queries from Chapters 2 and 3 will be easy, efficient, or even possible later on. Thinking carefully about data types, `NULL` handling, primary keys, and foreign key relationships at creation time is what makes the querying techniques from earlier chapters reliable in the first place. 
 
 
 ## terminate connection

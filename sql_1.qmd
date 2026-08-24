@@ -144,6 +144,8 @@ Notice that typical exploratory functions such as `str` and `glimpse` would work
 ```{r}
 str(flights)
 ```
+
+
 ```{r}
 glimpse(flights)  # notice the ?? on the number of rows
 ```
